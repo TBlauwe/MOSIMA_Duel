@@ -4,13 +4,13 @@ import MOSIMA_Duel.agents.MosimaAgent;
 import com.jme3.math.Vector3f;
 import env.jme.Situation;
 import jade.core.Agent;
-import jade.core.behaviours.TickerBehaviour;
 import org.jpl7.Query;
 import sma.AbstractAgent;
-import sma.actionsBehaviours.PrologBehavior;
+
+import java.lang.reflect.Modifier;
 
 
-public class AttackBehaviour extends TickerBehaviour {
+public class AttackBehaviour extends AbstractFSMSimpleBehaviour {
 
     //| ===============================
     //| ========== CONSTANTS ==========
@@ -19,60 +19,79 @@ public class AttackBehaviour extends TickerBehaviour {
     private static final long   FORGET_TIME         = 35;
 
 
+    //| ============================
+    //| ========== ENUMS ==========
+    //| ============================
+    public enum Outcome{
+        DEFAULT(-1);
+
+        private int value;
+        Outcome(int value) { this.value = value; }
+        public int getValue() { return this.value; }
+    }
+
     //| =============================
     //| ========== MEMBERS ==========
     //| =============================
-    private MosimaAgent agent;
     private String      enemy;
+    private Outcome     outcome;
     private long        lastTimeSeen;
-    private Vector3f     lastPosition;
+    private Vector3f    lastPosition;
+    private Situation   sit;
 
 
     //| =======================================
     //| ========== PUBLIC FUNCTIONS ==========
     //| =======================================
-    public AttackBehaviour(Agent a, long period, String enemy) {
-        super(a, period);
-        this.enemy = enemy;
-        agent = (MosimaAgent) a;
-        lastPosition = agent.getEnemyLocation(enemy);
+    public AttackBehaviour(Agent a) {
+        super(a);
+        outcome = Outcome.DEFAULT;
+        sit = Situation.getCurrentSituation(myAgent);
+        enemy = sit.enemy;
+        lastPosition = myAgent.getEnemyLocation(enemy);
         lastTimeSeen = System.currentTimeMillis();
-        agent.log("Attacking !");
     }
 
-
-    //| =======================================
-    //| ========== PRIVATE FUNCTIONS ==========
-    //| =======================================
     @Override
-    protected void onTick() {
-        agent.goTo(lastPosition);
+    public void action() {
+        myAgent.goTo(lastPosition);
 
-        if (agent.isVisible(enemy, AbstractAgent.VISION_DISTANCE)) {
+        if (myAgent.isVisible(enemy, MosimaAgent.VISION_DISTANCE)) {
             lastTimeSeen = System.currentTimeMillis();
-            lastPosition = agent.getEnemyLocation(enemy);
-            agent.lookAt(lastPosition);
+            lastPosition = myAgent.getEnemyLocation(enemy);
+            myAgent.lookAt(lastPosition);
 
             if (askForFirePermission()) {
-                agent.log("Enemy visible, FIRE !");
-                agent.lastAction = Situation.SHOOT;
-                agent.shoot(enemy);
+                myAgent.addLogEntry("Enemy visible, FIRE !");
+                myAgent.lastAction = Situation.SHOOT;
+                myAgent.shoot(enemy);
             }
 
         } else {
-            if (System.currentTimeMillis() - lastTimeSeen > FORGET_TIME * getPeriod()) {
-                agent.log("The Enemy run away");
-                agent.removeBehaviour(this);
-                agent.currentBehavior = null;
+            if (System.currentTimeMillis() - lastTimeSeen > FORGET_TIME) {
+                myAgent.addLogEntry("The Enemy run away");
             }
-            agent.lastAction = Situation.FOLLOW;
+            myAgent.lastAction = Situation.FOLLOW;
         }
     }
 
-    private static boolean askForFirePermission() {
+    @Override
+    public boolean done() {
+        myAgent.trace(getBehaviourName());
+        return true;
+    }
+
+    @Override
+    public int onEnd() {
+        return outcome.getValue();
+    }
+    //| =======================================
+    //| ========== PRIVATE FUNCTIONS ==========
+    //| =======================================
+    private boolean askForFirePermission() {
         String query = "toOpenFire("
-                + DecisionBehaviour.sit.enemyInSight + ","
-                + DecisionBehaviour.sit.impactProba + ")";
+                + sit.enemyInSight + ","
+                + sit.impactProba + ")";
         return Query.hasSolution(query);
     }
 }

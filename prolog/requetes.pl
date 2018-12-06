@@ -25,15 +25,6 @@ explore(Time, Size, Radius, MapWidth, Class):-
 	areaCovered(Radius, Size, MapWidth),
 	jpl_call(Class, executeExplore, [], @(void)).
 
-hunt(Life, Time, OffSize, DefSize, Radius, MapWidth, EnemyInSight, Class):-
-	not(being_attacked(Time)),
-	not(areaCovered(Radius, OffSize, MapWidth)),
-	not(areaCovered(Radius, DefSize, MapWidth));
-	inGoodHealth(Life),
-	being_attacked(Time),
-	not(EnemyInSight),
-	jpl_call(Class, executeHunt, [], @(void)).
-
 attack(EnemyInSight, Class):-
 	EnemyInSight,
 	jpl_call(Class, executeAttack, [], @(void)).

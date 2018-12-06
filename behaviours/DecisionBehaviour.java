@@ -1,45 +1,37 @@
 package MOSIMA_Duel.behaviours;
 
-import MOSIMA_Duel.agents.MosimaAgent;
 import env.jme.NewEnv;
 import env.jme.Situation;
 import jade.core.Agent;
-import jade.core.behaviours.TickerBehaviour;
 import org.jpl7.Query;
-import org.lwjgl.Sys;
 import sma.InterestPoint;
-
 import java.util.ArrayList;
 import java.util.EnumSet;
-import java.util.HashMap;
 
-public class DecisionBehaviour extends TickerBehaviour {
+public class DecisionBehaviour extends AbstractFSMSimpleBehaviour {
 
     //| ===============================
     //| ========== CONSTANTS ==========
     //| ===============================
     private static final long   serialVersionUID    = 5739600674796316846L;
     private static final String prologFile          = "'./src/MOSIMA_DUEL/prolog/requetes.pl'";
-    private static final HashMap<Behaviour, Class> behavioursClass = createMap();
-
-    private static HashMap<Behaviour, Class> createMap()
-    {
-        HashMap<Behaviour,Class> map = new HashMap<>();
-        map.put(Behaviour.EXPLORATION, ExplorationBehaviour.class);
-        map.put(Behaviour.HUNT, HuntBehaviour.class);
-        map.put(Behaviour.ATTACK, AttackBehaviour.class);
-        return map;
-    }
-
 
     //| ============================
     //| ========== ENUMS ==========
     //| ============================
+    public enum Outcome{
+        DEFAULT(-1),
+        EXPLORATION(0),
+        ATTACK(1);
+
+        private int value;
+        Outcome(int value) { this.value = value; }
+        public int getValue() { return this.value; }
+    }
 
     // String correspond to a prolog request's name
     public enum Behaviour {
         EXPLORATION("explore"),
-        HUNT("hunt"),
         ATTACK("attack");
 
         private String value;
@@ -51,37 +43,27 @@ public class DecisionBehaviour extends TickerBehaviour {
     //| =============================
     //| ========== MEMBERS ==========
     //| =============================
-    private static  MosimaAgent agent;
-    private static  Behaviour   nextBehaviour;
-
-    public static   Situation   sit;
+    private static Outcome     outcome;
 
 
     //| =======================================
     //| ========== PUBLIC FUNCTIONS ==========
     //| =======================================
-    public DecisionBehaviour(Agent a, long period) {
-        super(a, period);
-        agent = (MosimaAgent) a;
+    public DecisionBehaviour(Agent a) {
+        super(a);
+        outcome = Outcome.DEFAULT;
     }
 
-    public static void executeExplore() { nextBehaviour = Behaviour.EXPLORATION; }
-    public static void executeHunt()    { nextBehaviour = Behaviour.HUNT; }
-    public static void executeAttack()  { nextBehaviour = Behaviour.ATTACK; }
-
-
-    //| =======================================
-    //| ========== PRIVATE FUNCTIONS ==========
-    //| =======================================
     @Override
-    protected void onTick() {
+    public void action() {
+        outcome = Outcome.DEFAULT;
         try {
             String prolog = "consult(" + prologFile + ")";
 
             if (!Query.hasSolution(prolog)) {
                 System.out.println("Cannot open file " + prologFile);
             } else {
-                sit = Situation.getCurrentSituation(agent);
+                Situation sit = Situation.getCurrentSituation(myAgent);
                 EnumSet<Behaviour>  behaviours  = EnumSet.allOf(Behaviour.class);
                 ArrayList<Object>   terms       = new ArrayList<>();
 
@@ -89,27 +71,14 @@ public class DecisionBehaviour extends TickerBehaviour {
                     terms.clear();
                     if (b.equals(Behaviour.EXPLORATION)) {
                         terms.add(sit.timeSinceLastShot);
-                        terms.add(((ExplorationBehaviour.prlNextOffend) ? sit.offSize : sit.defSize));
-                        terms.add(InterestPoint.INFLUENCE_ZONE);
-                        terms.add(NewEnv.MAX_DISTANCE);
-                    } else if (b.equals(Behaviour.HUNT)) {
-                        terms.add(sit.life);
-                        terms.add(sit.timeSinceLastShot);
                         terms.add(sit.offSize);
-                        terms.add(sit.defSize);
                         terms.add(InterestPoint.INFLUENCE_ZONE);
                         terms.add(NewEnv.MAX_DISTANCE);
-                        terms.add(sit.enemyInSight);
                     } else if (b.equals(Behaviour.ATTACK)) {
-                        //terms.add(sit.life);
                         terms.add(sit.enemyInSight);
-                        //terms.add(sit.impactProba);
                     }
-                    terms.add("'" + this.getClass().getCanonicalName() + "'");
-
-                    if (Query.hasSolution(prologQuery(b.value, terms))) {
-                        setNextBehavior();
-                    }
+                    terms.add("'" + this.getClass().getCanonicalName() + "'" );
+                    Query.hasSolution(prologQuery(b.value, terms));
                 }
             }
         } catch (Exception e) {
@@ -118,36 +87,25 @@ public class DecisionBehaviour extends TickerBehaviour {
         }
     }
 
-    private void setNextBehavior() {
-        if (agent.currentBehavior != null && behavioursClass.get(nextBehaviour) == agent.currentBehavior.getClass()) {
-            return;
-        }
-
-        if (agent.currentBehavior != null) {
-            agent.removeBehaviour(agent.currentBehavior);
-        }
-
-        jade.core.behaviours.Behaviour behaviour = null;
-        switch (nextBehaviour){
-            case EXPLORATION:
-                this.agent.log("Switching to " + nextBehaviour.toString());
-                behaviour = new ExplorationBehaviour(agent, MosimaAgent.PERIOD);
-                break;
-            case HUNT:
-                this.agent.log("Switching to " + nextBehaviour.toString());
-                behaviour = new HuntBehaviour(agent, MosimaAgent.PERIOD);
-                break;
-            case ATTACK:
-                this.agent.log("Switching to " + nextBehaviour.toString());
-                behaviour = new AttackBehaviour(agent, MosimaAgent.PERIOD, sit.enemy);
-                break;
-            default:
-                assert false;
-        }
-        agent.addBehaviour(behaviour);
-        agent.currentBehavior = behaviour;
+    @Override
+    public boolean done() {
+        myAgent.addLogEntry("I will " + outcome.getValue());
+        myAgent.trace(getBehaviourName());
+        return true;
     }
 
+    @Override
+    public int onEnd() {
+        return outcome.getValue();
+    }
+
+    public static void executeExplore() { outcome = Outcome.EXPLORATION; }
+    public static void executeAttack()  { outcome = Outcome.ATTACK; }
+
+
+    //| =======================================
+    //| ========== PRIVATE FUNCTIONS ==========
+    //| =======================================
     private String prologQuery(String behaviour, ArrayList<Object> terms) {
         StringBuilder query = new StringBuilder(behaviour +"(");
         for (Object t : terms) {
