@@ -34,8 +34,13 @@ public class StartupBehaviour extends AbstractFSMSimpleBehaviour {
     public void action() {
         myAgent.addLogEntry("sleeping for " + MosimaAgent.SLEEP_DURATION + " milliseconds");
         myAgent.trace(getBehaviourName());
-        myAgent.doWait(MosimaAgent.SLEEP_DURATION);
+        try {
+            Thread.sleep(MosimaAgent.SLEEP_DURATION);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         myAgent.addLogEntry("waking up");
+        myAgent.lastAction = "idle";
     }
 
     @Override

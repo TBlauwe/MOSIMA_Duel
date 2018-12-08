@@ -5,9 +5,6 @@ import com.jme3.math.Vector3f;
 import env.jme.Situation;
 import jade.core.Agent;
 import org.jpl7.Query;
-import sma.AbstractAgent;
-
-import java.lang.reflect.Modifier;
 
 
 public class AttackBehaviour extends AbstractFSMSimpleBehaviour {
@@ -33,10 +30,7 @@ public class AttackBehaviour extends AbstractFSMSimpleBehaviour {
     //| =============================
     //| ========== MEMBERS ==========
     //| =============================
-    private String      enemy;
     private Outcome     outcome;
-    private long        lastTimeSeen;
-    private Vector3f    lastPosition;
     private Situation   sit;
 
 
@@ -46,32 +40,37 @@ public class AttackBehaviour extends AbstractFSMSimpleBehaviour {
     public AttackBehaviour(Agent a) {
         super(a);
         outcome = Outcome.DEFAULT;
-        sit = Situation.getCurrentSituation(myAgent);
-        enemy = sit.enemy;
-        lastPosition = myAgent.getEnemyLocation(enemy);
-        lastTimeSeen = System.currentTimeMillis();
+        sit     = Situation.getCurrentSituation(myAgent);
     }
 
     @Override
     public void action() {
-        myAgent.goTo(lastPosition);
+        Vector3f lastPosition   = myAgent.getEnemyLocation(sit.enemy);
 
-        if (myAgent.isVisible(enemy, MosimaAgent.VISION_DISTANCE)) {
-            lastTimeSeen = System.currentTimeMillis();
-            lastPosition = myAgent.getEnemyLocation(enemy);
-            myAgent.lookAt(lastPosition);
+        //| ========== COMPUTATION ==========
+        /**
+        if(lastPosition != null) {
+            myAgent.goTo(lastPosition);
+            myAgent.addLogEntry("going to last position");
+        }
+         **/
 
-            if (askForFirePermission()) {
-                myAgent.addLogEntry("Enemy visible, FIRE !");
-                myAgent.lastAction = Situation.SHOOT;
-                myAgent.shoot(enemy);
+        if(sit.enemy != null){
+            if (myAgent.isVisible(sit.enemy, MosimaAgent.VISION_DISTANCE)) {
+                myAgent.lookAt(lastPosition);
+                myAgent.addLogEntry("Enemy visible !");
+                myAgent.saveCSV("/ressources/learningBase/stateChanged/", "results_sawEnemy", true);
+                if (askForFirePermission()){
+                    if (myAgent.canShoot()) {
+                        myAgent.addLogEntry("FIRE !");
+                        myAgent.shoot(sit.enemy);
+                        myAgent.confirmShoot();
+                        myAgent.lastAction = "attacking";
+                    }else{
+                        myAgent.addLogEntry("Reloading ...");
+                    }
+                }
             }
-
-        } else {
-            if (System.currentTimeMillis() - lastTimeSeen > FORGET_TIME) {
-                myAgent.addLogEntry("The Enemy run away");
-            }
-            myAgent.lastAction = Situation.FOLLOW;
         }
     }
 

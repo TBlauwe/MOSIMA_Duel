@@ -1,18 +1,27 @@
 package MOSIMA_Duel.agents;
 
 import MOSIMA_Duel.behaviours.*;
+import com.jme3.math.Vector3f;
 import env.jme.NewEnv;
 import env.jme.Situation;
 import jade.core.behaviours.FSMBehaviour;
+import org.lwjgl.Sys;
 import sma.actionsBehaviours.PrologBehavior;
 import sma.agents.FinalAgent;
 
+import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
 
 public class MosimaAgent extends FinalAgent {
@@ -22,7 +31,8 @@ public class MosimaAgent extends FinalAgent {
     //| ===============================
     private static final long serialVersionUID = 5215165765928961044L;
 
-    public static final long SLEEP_DURATION = 1500;
+    public static final long SLEEP_DURATION = 3000;
+    public static final long FIRE_RATE = 1000;
 
 
     //| ============================
@@ -44,6 +54,7 @@ public class MosimaAgent extends FinalAgent {
     //| ========== MEMBERS ==========
     //| =============================
     private FSMBehaviour fsm;
+    private long timeSinceLastShoot;
 
     // ~ Log
     private boolean		bTrace;
@@ -100,6 +111,7 @@ public class MosimaAgent extends FinalAgent {
             System.exit(-1);
         }
 
+        timeSinceLastShoot = 0;
         bTrace		= (boolean) args[2];
         logEntries	= new ArrayList<>();
         logFileName = "logs/" + getLocalName();
@@ -117,6 +129,17 @@ public class MosimaAgent extends FinalAgent {
     //| ======================================
     //| ========== PUBLIC FUNCTIONS ==========
     //| ======================================
+    public boolean canShoot(){
+        return System.currentTimeMillis() - timeSinceLastShoot > FIRE_RATE;
+    }
+
+    public void confirmShoot(){
+        timeSinceLastShoot = System.currentTimeMillis();
+    }
+
+    public boolean hasArrivedToDestination(){
+        return getDestination() != null && getCurrentPosition().distance(getDestination()) < MosimaAgent.NEIGHBORHOOD_DISTANCE / 2f;
+    }
 
 
     //| =====================================
@@ -153,5 +176,31 @@ public class MosimaAgent extends FinalAgent {
                 pw.close();
             }
         } catch (IOException e) { e.printStackTrace(); }
+    }
+
+    public void saveCSV(String folder, String name, boolean append) {
+        String res = Situation.getCurrentSituation(this).toCSVFile();
+        //String timeStamp = new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss").format(Calendar.getInstance().getTime());
+        String pathName = System.getProperty("user.dir") + folder;
+        String filename = name + ".csv";
+
+        Path path = Paths.get(pathName);
+        if (!Files.exists(path)) {
+            try {
+                Files.createDirectories(path);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        try(FileWriter fw = new FileWriter( pathName + filename, append);
+            BufferedWriter bw = new BufferedWriter(fw);
+            PrintWriter out = new PrintWriter(bw))
+        {
+            out.println(res);
+        } catch (IOException e) {
+            System.out.println(e);
+            System.out.println("Experiment saving failed");
+        }
     }
 }

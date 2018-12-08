@@ -89,8 +89,8 @@ public class DecisionBehaviour extends AbstractFSMSimpleBehaviour {
 
     @Override
     public boolean done() {
-        myAgent.addLogEntry("I will " + outcome.getValue());
-        myAgent.trace(getBehaviourName());
+        //myAgent.addLogEntry("I will " + Outcome.valueOf(outcome.toString()));
+        //myAgent.trace(getBehaviourName());
         return true;
     }
 

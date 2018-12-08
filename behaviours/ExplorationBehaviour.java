@@ -2,12 +2,8 @@ package MOSIMA_Duel.behaviours;
 
 import MOSIMA_Duel.agents.MosimaAgent;
 import com.jme3.math.Vector3f;
-import env.jme.Situation;
 import jade.core.Agent;
-import org.jpl7.Query;
-import sma.AbstractAgent;
-import sma.InterestPoint;
-import sma.InterestPoint.Type;
+import sma.agents.FinalAgent;
 
 import java.util.ArrayList;
 import java.util.concurrent.ThreadLocalRandom;
@@ -38,36 +34,42 @@ public class ExplorationBehaviour extends AbstractFSMSimpleBehaviour {
     //| ========== MEMBERS ==========
     //| =============================
     private Outcome     outcome;
+    private boolean     changedTarget;
 
     //| =======================================
     //| ========== PUBLIC FUNCTIONS ==========
     //| =======================================
     public ExplorationBehaviour(Agent a) {
         super(a);
+        changedTarget = false;
         outcome = Outcome.DEFAULT;
     }
 
     @Override
     public void action() {
-        if(ThreadLocalRandom.current().nextFloat() <= RANDOM_GO_HIGH){
-            myAgent.addLogEntry("going to an higher position");
-            Vector3f target = findHighestNeighbor();
-            if (target != null && myAgent.getCurrentPosition().distance(target) < MosimaAgent.NEIGHBORHOOD_DISTANCE / 2f) {
+        //| ========== COMPUTATION ==========
+        if(myAgent.getDestination() == null || myAgent.hasArrivedToDestination()) {
+            if(ThreadLocalRandom.current().nextFloat() <= RANDOM_GO_HIGH){
+                myAgent.addLogEntry("going to an higher position");
+                Vector3f target = findHighestInSight();
                 myAgent.moveTo(target);
             }else{
-                myAgent.addLogEntry("exploring (random move)");
+                /**
+                myAgent.addLogEntry("going to an higher position locally)");
+                Vector3f target = findHighestNeighbor();
+                myAgent.moveTo(target);
+                 **/
                 myAgent.randomMove();
             }
-        }else{
-            myAgent.addLogEntry("exploring (random move)");
-            myAgent.randomMove();
+            changedTarget = true;
         }
-        //agent.getEnvironement().drawDebug(agent.getCurrentPosition(), agent.getDestination());
     }
 
     @Override
     public boolean done() {
-        myAgent.trace(getBehaviourName());
+        myAgent.lastAction = "exploring";
+        if(changedTarget)
+            myAgent.trace(getBehaviourName());
         return true;
     }
 
