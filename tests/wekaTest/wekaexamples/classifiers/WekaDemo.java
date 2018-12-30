@@ -130,7 +130,7 @@ public class WekaDemo {
         StringBuffer result;
 
         result = new StringBuffer();
-        result.append("Weka - Demo\n===========\n\n");
+        result.append("IWeka - Demo\n===========\n\n");
 
         result.append("Classifier...: "
                 + m_Classifier.getClass().getName() + " "

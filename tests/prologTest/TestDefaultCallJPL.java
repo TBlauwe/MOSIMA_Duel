@@ -27,7 +27,7 @@ import org.jpl7.Util;
 import org.jpl7.Variable;
 
 /**
- * This class is used as a test to check the jpl installation
+ * This class is used as a WekaInterface to check the jpl installation
  *
  */
 public class TestDefaultCallJPL {
@@ -53,9 +53,9 @@ public class TestDefaultCallJPL {
     }
 
     static void test_0() {
-        System.out.print("test 0...");
+        System.out.print("WekaInterface 0...");
         //loading the file
-        String t0 = "consult('./ressources/prolog/test/test.pl')";
+        String t0 = "consult('./ressources/prolog/WekaInterface/WekaInterface.pl')";
 
         //
         if (!Query.hasSolution(t0)) {
@@ -71,7 +71,7 @@ public class TestDefaultCallJPL {
     static Term pair_a_b = new Compound("-", new Term[]{a, b});
 
     static void test_1() {
-        System.out.print("test 1...");
+        System.out.print("WekaInterface 1...");
         String t1 = "p(a)";
         if (!Query.hasSolution(t1)) {
             System.out.println(t1 + " failed");
@@ -81,7 +81,7 @@ public class TestDefaultCallJPL {
     }
 
     static void test_2() {
-        System.out.print("test 2...");
+        System.out.print("WekaInterface 2...");
         Query q2 = new Query("p", new Term[]{f_a});
         if (!q2.hasSolution()) {
             System.out.println("p(f(a)) failed");
@@ -91,7 +91,7 @@ public class TestDefaultCallJPL {
     }
 
     static void test_3() {
-        System.out.print("test 3...");
+        System.out.print("WekaInterface 3...");
         Query q3 = new Query("p", new Term[]{pair_a_b});
         if (!q3.hasSolution()) {
             System.out.println("p(a-b) failed");
@@ -101,7 +101,7 @@ public class TestDefaultCallJPL {
     }
 
     static void test_4() {
-        System.out.print("test 4...");
+        System.out.print("WekaInterface 4...");
         Variable X = new Variable("X");
         Query q4 = new Query("p", new Term[]{X});
         Term[] target = new Term[]{a, f_a, pair_a_b, new Variable("_")};
@@ -125,7 +125,7 @@ public class TestDefaultCallJPL {
     }
 
     static void test_5() {
-        System.out.print("test 5...");
+        System.out.print("WekaInterface 5...");
         Variable X = new Variable("X");
         Variable Y = new Variable("Y");
         Query q5 = new Query("p", new Term[]{X, Y});
@@ -158,7 +158,7 @@ public class TestDefaultCallJPL {
     }
 
     static void test_6() {
-        System.out.print("test 6...");
+        System.out.print("WekaInterface 6...");
         Variable X = new Variable("X");
         Query q6 = new Query("p", new Term[]{X, X});
         Term[] x_target = new Term[]{a};
@@ -182,7 +182,7 @@ public class TestDefaultCallJPL {
     }
 
     static void test_7() {
-        System.out.print("test 7...");
+        System.out.print("WekaInterface 7...");
 
         String t7 = "r(f(X,X), Y)";
 
@@ -225,7 +225,7 @@ public class TestDefaultCallJPL {
     }
 
     static void test_8() {
-        System.out.print("test 8...");
+        System.out.print("WekaInterface 8...");
         // Variable X = new Variable("X");
         // Query query = new Query("r", new Term[] { new Compound("f", new Term[] { X, X }), X });
         String t8 = "r(f(X,X), X)";
@@ -243,7 +243,7 @@ public class TestDefaultCallJPL {
     static Term test_9_solution = Util.termArrayToList(new Term[]{new Compound("-", new Term[]{a, a}), new Compound("-", new Term[]{a, b})});
 
     static void test_9() {
-        System.out.print("test 9...");
+        System.out.print("WekaInterface 9...");
         String t9 = "bagof(X-Y, p(X,Y), XYs)";
         Map<String, Term>[] solutions = Query.allSolutions(t9);
         if (solutions.length != 1) {
@@ -269,7 +269,7 @@ public class TestDefaultCallJPL {
     }
 
     static void test_10() {
-        System.out.print("test 10...");
+        System.out.print("WekaInterface 10...");
         String t10 = "t";
         try {
             boolean b = Query.hasSolution(t10);
@@ -285,7 +285,7 @@ public class TestDefaultCallJPL {
     }
 
     static void test_11() {
-        System.out.print("test 11...");
+        System.out.print("WekaInterface 11...");
         Term tuple = new Compound("t", new Term[]{new Atom("a"), new Atom("b"), new Atom("c"), new Atom("d"), new Atom("e")});
         try {
             Variable X = new Variable("X");
@@ -328,7 +328,7 @@ public class TestDefaultCallJPL {
     }
 
     static void test_101() {
-        System.out.print("test 101...");
+        System.out.print("WekaInterface 101...");
         Thread[] threads = new Thread[10];
         for (int i = 0; i < threads.length; ++i) {
             threads[i] = new QueryThread(i);

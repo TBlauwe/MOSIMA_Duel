@@ -1,7 +1,6 @@
 package env.jme;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 import com.jme3.math.Vector3f;
 
@@ -116,7 +115,7 @@ public class Situation {
 
         sit.maxAltitude = max;
         sit.minAltitude = min;
-        sit.averageAltitude = averageAltitude;
+        sit.averageAltitude = averageAltitude / goldenPoints.size();
         sit.currentAltitude = a.getSpatial().getWorldTranslation().getY();
 
         sit.fovValue = fovValue;
@@ -147,23 +146,43 @@ public class Situation {
             val += point.value;
         }
         return val;
-
-
     }
 
-    public static String getCSVColumns() {
-        return "OffDataSize;DefDataSize;OffDataValue;DefDataValue;AvgAltitude;MinAltitude;MaxAltitude;CurrentAltitude;FovValue;LastAction;Life;ImpactProba";
+    public enum ARFF_TYPE {
+        REAL("REAL"),
+        INTEGER("INTEGER"),
+        NOMINAL("NOMINAL"),
+        STRING("STRING");
 
+        private String value;
+        ARFF_TYPE(String value) { this.value = value; }
+        public String getValue() { return this.value; }
+    }
+
+    public static Map<String, ARFF_TYPE> getColumns() {
+        LinkedHashMap<String, ARFF_TYPE> columns = new LinkedHashMap<>();
+
+        columns.put("AvgAltitude", ARFF_TYPE.REAL);
+        columns.put("MinAltitude", ARFF_TYPE.REAL);
+        columns.put("MaxAltitude", ARFF_TYPE.REAL);
+        columns.put("CurrentAltitude", ARFF_TYPE.REAL);
+        columns.put("FovValue", ARFF_TYPE.REAL);
+        //columns.put("LastAction", ARFF_TYPE.STRING);
+        columns.put("Life", ARFF_TYPE.REAL);
+        columns.put("ImpactProba", ARFF_TYPE.REAL);
+
+        return columns;
     }
 
     public String toCSVFile() {
-        String res = "";//getCSVColumns()+"\n";
-
-        res += offSize + ";" + defSize + ";" + offValue + ";" + defValue + ";" + averageAltitude + ";" + minAltitude + ";" + maxAltitude + ";" + currentAltitude + ";" + fovValue + ";" + lastAction + ";" + life
-                + ";" + impactProba + ";";
-
-        res += (victory) ? "VICTORY" : "DEFEAT";
-
+        String res =
+                averageAltitude + "," +
+                minAltitude + "," +
+                maxAltitude + "," +
+                currentAltitude + "," +
+                fovValue + "," +
+                life + "," +
+                impactProba;
         return res;
     }
 

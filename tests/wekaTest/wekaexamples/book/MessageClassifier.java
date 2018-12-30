@@ -141,11 +141,11 @@ public class MessageClassifier
             m_UpToDate = true;
         }
 
-        // Make separate little test set so that message
+        // Make separate little WekaInterface set so that message
         // does not get added to string attribute in m_Data.
         Instances testset = m_Data.stringFreeStructure();
 
-        // Make message into test instance.
+        // Make message into WekaInterface instance.
         Instance instance = makeInstance(message, testset);
 
         // Filter instance.

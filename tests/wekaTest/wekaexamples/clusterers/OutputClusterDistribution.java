@@ -36,7 +36,7 @@ import weka.core.converters.ConverterUtils.DataSource;
 public class OutputClusterDistribution {
 
     /**
-     * Expects two parameters: training file and test file.
+     * Expects two parameters: training file and WekaInterface file.
      *
      * @param args the commandline arguments
      * @throws Exception if something goes wrong
@@ -47,7 +47,7 @@ public class OutputClusterDistribution {
         Instances test = DataSource.read(args[1]);
         if (!train.equalHeaders(test))
             throw new IllegalArgumentException(
-                    "Train and test set are not compatible!");
+                    "Train and WekaInterface set are not compatible!");
 
         // build clusterer
         EM clusterer = new EM();

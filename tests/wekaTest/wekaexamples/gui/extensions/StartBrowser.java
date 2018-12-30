@@ -32,7 +32,7 @@ import javax.swing.JFrame;
 
 /**
  * An extension to be displayed in the <code>weka.gui.Main</code> class
- * in the <i>Extension</i> menu: starts a browser with the Weka homepage.
+ * in the <i>Extension</i> menu: starts a browser with the IWeka homepage.
  *
  * @author fracpete (fracpete at waikato dot ac dot nz)
  * @version $Revision: 5628 $

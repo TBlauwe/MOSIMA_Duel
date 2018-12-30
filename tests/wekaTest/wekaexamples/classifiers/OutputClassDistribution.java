@@ -37,7 +37,7 @@ import weka.core.converters.ConverterUtils.DataSource;
 public class OutputClassDistribution {
 
     /**
-     * Expects two parameters: training file and test file.
+     * Expects two parameters: training file and WekaInterface file.
      *
      * @param args the commandline arguments
      * @throws Exception if something goes wrong
@@ -50,7 +50,7 @@ public class OutputClassDistribution {
         test.setClassIndex(test.numAttributes() - 1);
         if (!train.equalHeaders(test))
             throw new IllegalArgumentException(
-                    "Train and test set are not compatible!");
+                    "Train and WekaInterface set are not compatible!");
 
         // train classifier
         J48 cls = new J48();

@@ -41,25 +41,23 @@ public class ExplorationBehaviour extends AbstractFSMSimpleBehaviour {
     //| =======================================
     public ExplorationBehaviour(Agent a) {
         super(a);
-        changedTarget = false;
-        outcome = Outcome.DEFAULT;
     }
 
     @Override
     public void action() {
+        changedTarget = false;
+        outcome = Outcome.DEFAULT;
+
         //| ========== COMPUTATION ==========
         if(myAgent.getDestination() == null || myAgent.hasArrivedToDestination()) {
             if(ThreadLocalRandom.current().nextFloat() <= RANDOM_GO_HIGH){
                 myAgent.addLogEntry("going to an higher position");
-                Vector3f target = findHighestInSight();
-                myAgent.moveTo(target);
-            }else{
-                /**
-                myAgent.addLogEntry("going to an higher position locally)");
                 Vector3f target = findHighestNeighbor();
                 myAgent.moveTo(target);
-                 **/
-                myAgent.randomMove();
+            }else{
+                myAgent.addLogEntry("going to an random position locally)");
+                Vector3f target = findRandomNeighbor();
+                myAgent.moveTo(target);
             }
             changedTarget = true;
         }
@@ -84,7 +82,7 @@ public class ExplorationBehaviour extends AbstractFSMSimpleBehaviour {
     //| =======================================
     private Vector3f findHighestNeighbor() {
         ArrayList<Vector3f> points = myAgent.sphereCast(myAgent.getSpatial(),
-                MosimaAgent.NEIGHBORHOOD_DISTANCE,
+                MosimaAgent.VISION_NEIGHBOUR_DISTANCE,
                 MosimaAgent.CLOSE_PRECISION,
                 MosimaAgent.VISION_ANGLE);
         return getHighest(points);
@@ -96,6 +94,14 @@ public class ExplorationBehaviour extends AbstractFSMSimpleBehaviour {
                 MosimaAgent.FAR_PRECISION,
                 MosimaAgent.VISION_ANGLE);
         return getHighest(points);
+    }
+
+    private Vector3f findRandomNeighbor() {
+        ArrayList<Vector3f> points = myAgent.sphereCast(myAgent.getSpatial(),
+                MosimaAgent.VISION_NEIGHBOUR_DISTANCE,
+                MosimaAgent.CLOSE_PRECISION,
+                MosimaAgent.VISION_ANGLE);
+        return points.get(ThreadLocalRandom.current().nextInt(points.size()));
     }
 
     private Vector3f getHighest(ArrayList<Vector3f> points) {

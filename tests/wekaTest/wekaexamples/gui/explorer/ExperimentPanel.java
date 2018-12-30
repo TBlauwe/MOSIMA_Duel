@@ -205,7 +205,7 @@ public class ExperimentPanel
     protected Instances m_Instances;
 
     /**
-     * The loader used to load the user-supplied test set (if any).
+     * The loader used to load the user-supplied WekaInterface set (if any).
      */
     protected Loader m_TestLoader;
 
@@ -954,7 +954,7 @@ public class ExperimentPanel
      */
     public static void main(String[] args) {
         try {
-            final javax.swing.JFrame jf = new javax.swing.JFrame("Weka Explorer: Experiment");
+            final javax.swing.JFrame jf = new javax.swing.JFrame("IWeka Explorer: Experiment");
             jf.getContentPane().setLayout(new BorderLayout());
             final ExperimentPanel sp = new ExperimentPanel();
             jf.getContentPane().add(sp, BorderLayout.CENTER);

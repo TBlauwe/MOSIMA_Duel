@@ -46,7 +46,7 @@ public class PredictionError
      * Get a JMenu or JMenuItem which contain action listeners
      * that perform the visualization, using some but not
      * necessarily all of the data.  Exceptions thrown because of
-     * changes in Weka since compilation need to be caught by
+     * changes in IWeka since compilation need to be caught by
      * the implementer.
      *
      * @param preds    predictions
@@ -75,7 +75,7 @@ public class PredictionError
     }
 
     /**
-     * Get the minimum version of Weka, inclusive, the class
+     * Get the minimum version of IWeka, inclusive, the class
      * is designed to work with.  eg: <code>3.5.0</code>
      *
      * @return the minimum version
@@ -85,7 +85,7 @@ public class PredictionError
     }
 
     /**
-     * Get the maximum version of Weka, exclusive, the class
+     * Get the maximum version of IWeka, exclusive, the class
      * is designed to work with.  eg: <code>3.6.0</code>
      *
      * @return the maximum version
@@ -95,7 +95,7 @@ public class PredictionError
     }
 
     /**
-     * Get the specific version of Weka the class is designed for.
+     * Get the specific version of IWeka the class is designed for.
      * eg: <code>3.5.1</code>
      *
      * @return the version it was designed for

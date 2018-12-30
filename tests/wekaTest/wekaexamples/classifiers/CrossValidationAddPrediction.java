@@ -35,7 +35,7 @@ import java.util.Random;
 
 /**
  * Performs a single run of cross-validation and adds the prediction on the
- * test set to the dataset.
+ * WekaInterface set to the dataset.
  * <p>
  * Command-line parameters:
  * <ul>
@@ -122,7 +122,7 @@ public class CrossValidationAddPrediction {
             filter.setOutputErrorFlag(true);
             filter.setInputFormat(train);
             Filter.useFilter(train, filter);  // trains the classifier
-            Instances pred = Filter.useFilter(test, filter);  // perform predictions on test set
+            Instances pred = Filter.useFilter(test, filter);  // perform predictions on WekaInterface set
             if (predictedData == null)
                 predictedData = new Instances(pred, 0);
             for (int j = 0; j < pred.numInstances(); j++)

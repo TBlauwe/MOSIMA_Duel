@@ -31,7 +31,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 
 /**
- * Shows how to generate compatible train/test sets using the Discretize
+ * Shows how to generate compatible train/WekaInterface sets using the Discretize
  * filter.
  *
  * @author FracPete (fracpete at waikato dot ac dot nz)
@@ -79,9 +79,9 @@ public class DiscretizeTest {
      * Takes four arguments:
      * <ol>
      * <li>input train file</li>
-     * <li>input test file</li>
+     * <li>input WekaInterface file</li>
      * <li>output train file</li>
-     * <li>output test file</li>
+     * <li>output WekaInterface file</li>
      * </ol>
      *
      * @param args the commandline arguments

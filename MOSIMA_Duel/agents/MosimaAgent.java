@@ -1,27 +1,17 @@
 package MOSIMA_Duel.agents;
 
 import MOSIMA_Duel.behaviours.*;
-import com.jme3.math.Vector3f;
 import env.jme.NewEnv;
 import env.jme.Situation;
 import jade.core.behaviours.FSMBehaviour;
-import org.lwjgl.Sys;
 import sma.actionsBehaviours.PrologBehavior;
 import sma.agents.FinalAgent;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
+import java.util.*;
 
 
 public class MosimaAgent extends FinalAgent {
@@ -33,6 +23,8 @@ public class MosimaAgent extends FinalAgent {
 
     public static final long SLEEP_DURATION = 3000;
     public static final long FIRE_RATE = 1000;
+    public static final float VISION_NEIGHBOUR_DISTANCE = 1.0f;
+    public static final float VISION_FULL = 2.0f* (float) Math.PI;
 
 
     //| ============================
@@ -60,6 +52,7 @@ public class MosimaAgent extends FinalAgent {
     private boolean		bTrace;
     private String		logFileName;
     private List<String> logEntries;
+    private List<String> csvEntries;
 
 
     //| =======================================
@@ -114,6 +107,7 @@ public class MosimaAgent extends FinalAgent {
         timeSinceLastShoot = 0;
         bTrace		= (boolean) args[2];
         logEntries	= new ArrayList<>();
+        csvEntries	= new ArrayList<>();
         logFileName = "logs/" + getLocalName();
         String s	=   "~~~ DESCRIPTION ~~~" + "\n" +
                         "Name = " + getLocalName() + "\n" +
@@ -151,6 +145,18 @@ public class MosimaAgent extends FinalAgent {
             logEntries.add(prefix + s);
     }
 
+    public void addCSVEntry(String s) {
+            csvEntries.add(s);
+    }
+
+    public List<String> getCSVEntries() {
+        return csvEntries;
+    }
+
+    public void clearCSVEntries() {
+        csvEntries.clear();
+    }
+
     public void trace(String title) {
         if(!bTrace) { return; }
 
@@ -178,11 +184,9 @@ public class MosimaAgent extends FinalAgent {
         } catch (IOException e) { e.printStackTrace(); }
     }
 
-    public void saveCSV(String folder, String name, boolean append) {
-        String res = Situation.getCurrentSituation(this).toCSVFile();
-        //String timeStamp = new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss").format(Calendar.getInstance().getTime());
+    public void saveCSV(String folder, String name, String relation, String data, boolean append, boolean useVictory) {
         String pathName = System.getProperty("user.dir") + folder;
-        String filename = name + ".csv";
+        String filename = name + ".arff";
 
         Path path = Paths.get(pathName);
         if (!Files.exists(path)) {
@@ -193,11 +197,28 @@ public class MosimaAgent extends FinalAgent {
             }
         }
 
+        boolean newFile = true;
+        File f = new File(pathName + filename);
+        if(f.exists() && !f.isDirectory()) {
+            newFile = false;
+        }
+
         try(FileWriter fw = new FileWriter( pathName + filename, append);
             BufferedWriter bw = new BufferedWriter(fw);
             PrintWriter out = new PrintWriter(bw))
         {
-            out.println(res);
+            Map<String, Situation.ARFF_TYPE> columns = Situation.getColumns();
+            if(newFile){
+               out.println("@RELATION " + relation);
+               for(Map.Entry<String, Situation.ARFF_TYPE> column : columns.entrySet()){
+                   out.println("@ATTRIBUTE " + column.getKey() + " " + column.getValue());
+               }
+               if(useVictory)
+                   out.println("@ATTRIBUTE class {VICTORY, DEFEAT}");
+               out.println("");
+               out.println("@DATA");
+            }
+            out.println(data);
         } catch (IOException e) {
             System.out.println(e);
             System.out.println("Experiment saving failed");

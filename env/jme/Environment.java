@@ -352,7 +352,7 @@ public class Environment extends SimpleApplication {
 
             //randomMove(agentName);
 
-            // test for arrow
+            // WekaInterface for arrow
             //		    Arrow arrow = new Arrow(Vector3f.UNIT_Z.mult(2));
             //		    Geometry mark = new Geometry("arrow", arrow);
             //			Material m1 = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");

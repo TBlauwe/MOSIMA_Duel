@@ -89,7 +89,7 @@ public class VisualizeClusterAssignments {
         // display data
         // taken from: ClustererPanel.visualizeClusterAssignments(VisualizePanel)
         String plotName = vp.getName();
-        JFrame jf = new JFrame("Weka Clusterer Visualize: " + plotName);
+        JFrame jf = new JFrame("IWeka Clusterer Visualize: " + plotName);
         jf.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         jf.setSize(500, 400);
         jf.getContentPane().setLayout(new BorderLayout());
