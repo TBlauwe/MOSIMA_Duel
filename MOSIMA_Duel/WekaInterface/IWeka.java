@@ -1,10 +1,14 @@
 package MOSIMA_Duel.WekaInterface;
 
+import env.jme.Situation;
 import weka.classifiers.Classifier;
+import weka.core.Instance;
 import weka.core.Instances;
 import weka.classifiers.Evaluation;
 
 import java.awt.*;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 import weka.core.converters.ConverterUtils.DataSource;
 import weka.classifiers.trees.J48;
@@ -26,12 +30,12 @@ public class IWeka {
     //| ============================
     //| ========== ENUMS ==========
     //| ============================
-    public enum DataSet{
+    public enum EDataSet {
         GAME_OVER("gameOver/results.arff"),
         STATE_CHANGED("stateChanged/state_changed.arff");
 
         private String value;
-        DataSet(String value) { this.value = value; }
+        EDataSet(String value) { this.value = value; }
         public String getValue() { return this.value; }
     }
 
@@ -52,12 +56,15 @@ public class IWeka {
     //| =============================
     //| ========== MEMBERS ==========
     //| =============================
-    public static DataSet dataSet = DataSet.GAME_OVER;
+    public static EDataSet source = EDataSet.GAME_OVER;
+    public static Instances dataSet;
+    public static Classifier classifier;
+    public static Evaluation eval;
 
     //| =======================================
     //| ========== PUBLIC FUNCTIONS ===========
     //| =======================================
-    public static void evalutate() throws Exception {
+    public static void initialize() throws Exception {
         // Initialization
         DataSource source = new DataSource(getFullDataSetPath());
         Instances data = source.getDataSet();
@@ -65,17 +72,79 @@ public class IWeka {
             data.setClassIndex(data.numAttributes() - 1);
 
         // Filtering
-        Instances filteredData = filterData(data);
+        dataSet = filterData(data);
 
         // Classify
-        J48 tree = new J48();         // new instance of tree
-        tree.setOptions(weka.core.Utils.splitOptions("-C 0.25 -M 2"));     // set the options
-        tree.buildClassifier(filteredData);   // build classifier
+        classifier = new J48();         // new instance of tree
+        classifier.setOptions(weka.core.Utils.splitOptions("-C 0.25 -M 2"));     // set the options
+        classifier.buildClassifier(dataSet);   // build classifier
 
-        evaluateTree(tree, filteredData);
+        evaluateTree(classifier, dataSet);
     }
 
-    public static Instances filterData(Instances data) throws Exception{
+    public static Map.Entry<String, Double> classify(Instance instance) {
+
+        try {
+            // Make the prediction here.
+            double predictionIndex = classifier.classifyInstance(instance);
+
+            // Get the predicted class label from the predictionIndex.
+            String predictedClassLabel = instance.classAttribute().value((int) predictionIndex);
+            // 0.0 = Victory
+            // 1.0 = Defeat
+
+            // Get the prediction probability distribution.
+            double[] predictionDistribution = classifier.distributionForInstance(instance);
+            double predictionProbability = predictionDistribution[(int) predictionIndex];
+
+            return new HashMap.SimpleEntry<>(predictedClassLabel, predictionProbability);
+
+        } catch (Exception e1) {
+            e1.printStackTrace();
+        }
+        return null;
+    }
+
+    public static Instance situationToInstance(Situation sit){
+        Instance instance = new Instance(EAttribute.values().length);
+        instance.setDataset(dataSet);
+        instance.setValue(0, (double) sit.averageAltitude);
+        instance.setValue(1, (double) sit.minAltitude);
+        instance.setValue(2, (double) sit.maxAltitude);
+        instance.setValue(3, (double) sit.currentAltitude);
+        instance.setValue(4, (double) sit.currentAltitude);
+        instance.setValue(5, (double) sit.life);
+        instance.setValue(6, (double) sit.impactProba);
+        instance.setClassValue("DEFEAT"); //Doesn't matter since it won't be used
+
+        return instance;
+    }
+
+    public static void visualizeTree(){
+        TreeVisualizer tv = null;
+        try {
+            tv = new TreeVisualizer(null, ((J48) classifier).graph(), new PlaceNode2());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        JFrame jf = new JFrame("IWeka Classifier Tree Visualizer: J48");
+        jf.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        jf.setSize(800, 600);
+        jf.getContentPane().setLayout(new BorderLayout());
+        jf.getContentPane().add(tv, BorderLayout.CENTER);
+        jf.setVisible(true);
+        tv.fitToScreen();
+    }
+
+    //| =======================================
+    //| ========== PRIVATE FUNCTIONS ===========
+    //| =======================================
+    private static void evaluateTree(Classifier cls, Instances data) throws Exception{
+        eval = new Evaluation(data);
+        eval.crossValidateModel(cls, data, 10, new Random(1));
+    }
+
+    private static Instances filterData(Instances data) throws Exception{
         Remove remove = new Remove(); // new instance of filter
         String options = "";
         int counter = 1;
@@ -95,45 +164,7 @@ public class IWeka {
         return Filter.useFilter(data, remove);                      // apply filter
     }
 
-    public static void evaluateTree(Classifier cls, Instances data) throws Exception{
-        Evaluation eval = new Evaluation(data);
-        eval.crossValidateModel(cls, data, 10, new Random(1));
-    }
-
-    public static void visualizeTree(String graph){
-        TreeVisualizer tv = new TreeVisualizer(null, graph, new PlaceNode2());
-        JFrame jf = new JFrame("IWeka Classifier Tree Visualizer: J48");
-        jf.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        jf.setSize(800, 600);
-        jf.getContentPane().setLayout(new BorderLayout());
-        jf.getContentPane().add(tv, BorderLayout.CENTER);
-        jf.setVisible(true);
-        tv.fitToScreen();
-    }
-    //| =======================================
-    //| ========== PRIVATE FUNCTIONS ===========
-    //| =======================================
     private static String getFullDataSetPath(){
-        return dirPath + dataSet.value;
+        return dirPath + source.value;
     }
-
-    public static void main(String[] args) throws Exception{
-        // Initialization
-        DataSource source = new DataSource(getFullDataSetPath());
-        Instances data = source.getDataSet();
-        if (data.classIndex() == -1)
-            data.setClassIndex(data.numAttributes() - 1);
-
-        // Filtering
-        Instances filteredData = filterData(data);
-
-        // Classify
-        J48 tree = new J48();         // new instance of tree
-        tree.setOptions(weka.core.Utils.splitOptions("-C 0.25 -M 2"));     // set the options
-        tree.buildClassifier(filteredData);   // build classifier
-
-        evaluateTree(tree, filteredData);
-        visualizeTree(tree.graph());
-    }
-
 }

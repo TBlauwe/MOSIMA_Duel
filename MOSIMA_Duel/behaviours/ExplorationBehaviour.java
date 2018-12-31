@@ -1,40 +1,51 @@
 package MOSIMA_Duel.behaviours;
 
+import MOSIMA_Duel.WekaInterface.IWeka;
 import MOSIMA_Duel.agents.MosimaAgent;
 import com.jme3.math.Vector3f;
+import env.jme.Situation;
 import jade.core.Agent;
+import org.jpl7.Query;
 import sma.agents.FinalAgent;
+import weka.core.Instance;
 
-import java.util.ArrayList;
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Collectors;
 
 public class ExplorationBehaviour extends AbstractFSMSimpleBehaviour {
 
     //| ===============================
     //| ========== CONSTANTS ==========
     //| ===============================
-    private static final long   serialVersionUID = 4958939169231338495L;
-    private static final float  RANDOM_GO_HIGH  = 0.80f;
+    private static final long serialVersionUID = 4958939169231338495L;
 
     //| ============================
     //| ========== ENUMS ==========
     //| ============================
-    public enum Outcome{
+    public enum Outcome {
         DEFAULT(-1),
         EXPLORATION(0),
         ATTACK(1);
 
         private int value;
-        Outcome(int value) { this.value = value; }
-        public int getValue() { return this.value; }
+
+        Outcome(int value) {
+            this.value = value;
+        }
+
+        public int getValue() {
+            return this.value;
+        }
     }
 
 
     //| =============================
     //| ========== MEMBERS ==========
     //| =============================
-    private Outcome     outcome;
-    private boolean     changedTarget;
+    private Outcome outcome;
+    private boolean changedTarget;
+    private static Vector3f target;
 
     //| =======================================
     //| ========== PUBLIC FUNCTIONS ==========
@@ -48,15 +59,14 @@ public class ExplorationBehaviour extends AbstractFSMSimpleBehaviour {
         changedTarget = false;
         outcome = Outcome.DEFAULT;
 
-        //| ========== COMPUTATION ==========
-        if(myAgent.getDestination() == null || myAgent.hasArrivedToDestination()) {
-            if(ThreadLocalRandom.current().nextFloat() <= RANDOM_GO_HIGH){
-                myAgent.addLogEntry("going to an higher position");
-                Vector3f target = findHighestNeighbor();
+        if (myAgent.getDestination() == null || myAgent.hasArrivedToDestination()) {
+            findBestPos(); // Call Prolog
+            if (target != null) {
+                myAgent.addLogEntry("going to the best position based on my knowledge ");
                 myAgent.moveTo(target);
-            }else{
+            } else {
                 myAgent.addLogEntry("going to an random position locally)");
-                Vector3f target = findRandomNeighbor();
+                target = findRandomNeighbor();
                 myAgent.moveTo(target);
             }
             changedTarget = true;
@@ -66,7 +76,7 @@ public class ExplorationBehaviour extends AbstractFSMSimpleBehaviour {
     @Override
     public boolean done() {
         myAgent.lastAction = "exploring";
-        if(changedTarget)
+        if (changedTarget)
             myAgent.trace(getBehaviourName());
         return true;
     }
@@ -76,6 +86,51 @@ public class ExplorationBehaviour extends AbstractFSMSimpleBehaviour {
         return outcome.getValue();
     }
 
+    //| =======================================
+    //| ========== PROLOG FUNCTIONS ===========
+    //| =======================================
+    public static void evaluateBestPos() {
+        try {
+            ArrayList<Vector3f> points = myAgent.sphereCast(myAgent.getSpatial(),
+                    MosimaAgent.NEIGHBORHOOD_DISTANCE,
+                    MosimaAgent.CLOSE_PRECISION,
+                    MosimaAgent.VISION_ANGLE);
+
+            HashMap<Vector3f, Double> victoryProbabilities = new HashMap<>();
+
+            // Classify each point with trained classifier
+            for (Vector3f point : points) {
+                Situation situation = Situation.getSituationFromPos(myAgent, point);
+                Instance instance = IWeka.situationToInstance(situation);
+                HashMap.Entry<String, Double> score = IWeka.classify(instance);
+                if (score.getKey().compareToIgnoreCase("VICTORY") == 0) {
+                    victoryProbabilities.put(point, score.getValue());
+                } else {
+                    victoryProbabilities.put(point, 1 - score.getValue());
+                }
+            }
+
+            // Get the most promising point (highest victory probabilities)
+            // Sort and return a map containing the best one
+            Map<Vector3f, Double> bestOne =
+                    victoryProbabilities.entrySet().stream()
+                            .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
+                            .limit(1)
+                            .collect(Collectors.toMap(
+                                    Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
+
+            target = bestOne.entrySet().iterator().next().getKey();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private boolean  findBestPos() {
+        ArrayList<Object> terms = new ArrayList<>();
+        terms.add("'" + this.getClass().getCanonicalName() + "'");
+        return Query.hasSolution(prologQuery("see", terms));
+    }
 
     //| =======================================
     //| ========== PRIVATE FUNCTIONS ==========
@@ -128,6 +183,15 @@ public class ExplorationBehaviour extends AbstractFSMSimpleBehaviour {
             }
         }
         return best;
+    }
+
+    private String prologQuery (String behaviour, ArrayList < Object > terms){
+        StringBuilder query = new StringBuilder(behaviour + "(");
+        for (Object t : terms) {
+            query.append(t);
+            query.append(",");
+        }
+        return query.substring(0, query.length() - 1) + ")";
     }
 }
 

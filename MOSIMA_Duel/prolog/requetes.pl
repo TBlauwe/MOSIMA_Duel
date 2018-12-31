@@ -16,10 +16,12 @@ shotImpact(Probability):-
 	Probability>0.1.
 
 /* DECISIONS */
+see(Class):-
+	jpl_call(Class, evaluateBestPos, [], @(void)).
+
 toOpenFire(EnemyInSight, P, Class):-
 	shotImpact(P),
-	EnemyInSight,
-	jpl_call(Class, evaluateBestPos, [], @(void)).
+	EnemyInSight.
 
 explore(Time, Size, Radius, MapWidth, Class):-
 	not(being_attacked(Time)),

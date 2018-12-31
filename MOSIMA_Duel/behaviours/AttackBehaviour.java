@@ -2,15 +2,18 @@ package MOSIMA_Duel.behaviours;
 
 import MOSIMA_Duel.agents.MosimaAgent;
 import MOSIMA_Duel.WekaInterface.IWeka;
+import MOSIMA_Duel.utils.MapUtil;
 import com.jme3.math.Vector3f;
 import env.jme.Situation;
 import jade.core.Agent;
 import org.jpl7.Query;
+import org.lwjgl.Sys;
+import weka.core.Instance;
+import weka.core.Utils;
 
 import java.awt.*;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
+import java.util.*;
+import java.util.stream.Collectors;
 
 
 public class AttackBehaviour extends AbstractFSMSimpleBehaviour {
@@ -40,8 +43,6 @@ public class AttackBehaviour extends AbstractFSMSimpleBehaviour {
     private Situation   sit;
     private boolean     act;
 
-    private static Vector3f target;
-
     //| =======================================
     //| ========== PUBLIC FUNCTIONS ==========
     //| =======================================
@@ -51,30 +52,23 @@ public class AttackBehaviour extends AbstractFSMSimpleBehaviour {
 
     @Override
     public void action() {
-        act     = false;
         outcome = Outcome.DEFAULT;
         sit     = Situation.getCurrentSituation(myAgent);
+        act     = false;
 
-        //| ========== COMPUTATION ==========
         if(sit.enemy != null){
-
             if (myAgent.isVisible(sit.enemy, MosimaAgent.VISION_DISTANCE)) {
                 String res = Situation.getCurrentSituation(myAgent).toCSVFile();
                 myAgent.addCSVEntry(res);
-                if (myAgent.canShoot()) {
-                    if (askForFirePermission()){
-                        if(target != null){
-                            myAgent.goTo(target);
-                            target = null;
-                        }
-                        else{
-                            Vector3f lastPosition   = myAgent.getEnemyLocation(sit.enemy);
-
-                            if(lastPosition != null) {
+                if (myAgent.canShoot()) { // Is weapon cooldown finished ?
+                    if (askForFirePermission()){ // Prolog call
+                        // Go to nearest position
+                        Vector3f lastPosition   = myAgent.getEnemyLocation(sit.enemy);
+                        if(lastPosition != null) {
                                 myAgent.goTo(findHighestNeighborClosestTo(lastPosition));
-                            }
                         }
 
+                        // Firing
                         myAgent.addLogEntry("FIRING !");
                         myAgent.shoot(sit.enemy);
                         myAgent.confirmShoot();
@@ -96,17 +90,6 @@ public class AttackBehaviour extends AbstractFSMSimpleBehaviour {
     @Override
     public int onEnd() {
         return outcome.getValue();
-    }
-
-    //| =======================================
-    //| ========== PROLOG FUNCTIONS ===========
-    //| =======================================
-    public static void evaluateBestPos() {
-        try {
-            IWeka.evalutate();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 
     //| =======================================

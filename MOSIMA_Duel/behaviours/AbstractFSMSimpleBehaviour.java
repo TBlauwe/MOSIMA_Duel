@@ -8,7 +8,7 @@ public abstract class AbstractFSMSimpleBehaviour extends SimpleBehaviour {
 
     private static final long serialVersionUID = -933252582709302922L;
 
-    protected MosimaAgent myAgent;
+    protected static MosimaAgent myAgent;
 
     public AbstractFSMSimpleBehaviour(Agent a) {
         super(a);

@@ -1,5 +1,6 @@
 package MOSIMA_Duel.behaviours;
 
+import MOSIMA_Duel.WekaInterface.IWeka;
 import MOSIMA_Duel.agents.MosimaAgent;
 import jade.core.Agent;
 
@@ -35,8 +36,9 @@ public class StartupBehaviour extends AbstractFSMSimpleBehaviour {
         myAgent.addLogEntry("sleeping for " + MosimaAgent.SLEEP_DURATION + " milliseconds");
         myAgent.trace(getBehaviourName());
         try {
+            IWeka.initialize();
             Thread.sleep(MosimaAgent.SLEEP_DURATION);
-        } catch (InterruptedException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
         myAgent.addLogEntry("waking up");
