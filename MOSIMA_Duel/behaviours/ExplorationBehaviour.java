@@ -1,12 +1,13 @@
 package MOSIMA_Duel.behaviours;
 
-import MOSIMA_Duel.WekaInterface.IWeka;
+import MOSIMA_Duel.Utility.Utils;
+import MOSIMA_Duel.Weka.J48Classifier;
 import MOSIMA_Duel.agents.MosimaAgent;
+import MOSIMA_Duel.env.Situation;
 import com.jme3.math.Vector3f;
-import env.jme.Situation;
 import jade.core.Agent;
+import org.jpl7.JPL;
 import org.jpl7.Query;
-import sma.agents.FinalAgent;
 import weka.core.Instance;
 
 import java.util.*;
@@ -19,6 +20,7 @@ public class ExplorationBehaviour extends AbstractFSMSimpleBehaviour {
     //| ========== CONSTANTS ==========
     //| ===============================
     private static final long serialVersionUID = 4958939169231338495L;
+    private static final float RANDOM_EXPLORATION_PROBA = 0.20f;
 
     //| ============================
     //| ========== ENUMS ==========
@@ -59,16 +61,20 @@ public class ExplorationBehaviour extends AbstractFSMSimpleBehaviour {
         changedTarget = false;
         outcome = Outcome.DEFAULT;
 
-        if (myAgent.getDestination() == null || myAgent.hasArrivedToDestination()) {
-            findBestPos(); // Call Prolog
-            if (target != null) {
+        if (myAgent.hasArrivedToDestination()) {
+            if(myAgent.useWeka) {
+                findBestPos(); // Call Prolog
                 myAgent.addLogEntry("going to the best position based on my knowledge ");
-                myAgent.moveTo(target);
-            } else {
-                myAgent.addLogEntry("going to an random position locally)");
-                target = findRandomNeighbor();
-                myAgent.moveTo(target);
+            }else{
+                if(Utils.dice(RANDOM_EXPLORATION_PROBA)){
+                    myAgent.addLogEntry("going to an random position locally)");
+                    target = findRandomNeighbor();
+                }else{
+                    myAgent.addLogEntry("going to the highest position");
+                    target = findHighestNeighbor();
+                }
             }
+            myAgent.moveTo(target);
             changedTarget = true;
         }
     }
@@ -101,8 +107,8 @@ public class ExplorationBehaviour extends AbstractFSMSimpleBehaviour {
             // Classify each point with trained classifier
             for (Vector3f point : points) {
                 Situation situation = Situation.getSituationFromPos(myAgent, point);
-                Instance instance = IWeka.situationToInstance(situation);
-                HashMap.Entry<String, Double> score = IWeka.classify(instance);
+                Instance instance = J48Classifier.situationToInstance(situation);
+                HashMap.Entry<String, Double> score = J48Classifier.classify(instance);
                 if (score.getKey().compareToIgnoreCase("VICTORY") == 0) {
                     victoryProbabilities.put(point, score.getValue());
                 } else {
@@ -128,7 +134,9 @@ public class ExplorationBehaviour extends AbstractFSMSimpleBehaviour {
 
     private boolean  findBestPos() {
         ArrayList<Object> terms = new ArrayList<>();
-        terms.add("'" + this.getClass().getCanonicalName() + "'");
+        MOSIMA_Duel.env.Situation sit = MOSIMA_Duel.env.Situation.getCurrentSituation(myAgent);
+        terms.add(sit.enemyInSight);
+        terms.add("'" + this.getClass().getCanonicalName() + "'" );
         return Query.hasSolution(prologQuery("see", terms));
     }
 
@@ -137,7 +145,7 @@ public class ExplorationBehaviour extends AbstractFSMSimpleBehaviour {
     //| =======================================
     private Vector3f findHighestNeighbor() {
         ArrayList<Vector3f> points = myAgent.sphereCast(myAgent.getSpatial(),
-                MosimaAgent.VISION_NEIGHBOUR_DISTANCE,
+                MosimaAgent.VISION_DISTANCE,
                 MosimaAgent.CLOSE_PRECISION,
                 MosimaAgent.VISION_ANGLE);
         return getHighest(points);
@@ -153,7 +161,7 @@ public class ExplorationBehaviour extends AbstractFSMSimpleBehaviour {
 
     private Vector3f findRandomNeighbor() {
         ArrayList<Vector3f> points = myAgent.sphereCast(myAgent.getSpatial(),
-                MosimaAgent.VISION_NEIGHBOUR_DISTANCE,
+                MosimaAgent.VISION_DISTANCE,
                 MosimaAgent.CLOSE_PRECISION,
                 MosimaAgent.VISION_ANGLE);
         return points.get(ThreadLocalRandom.current().nextInt(points.size()));

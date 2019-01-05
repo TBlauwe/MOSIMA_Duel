@@ -105,7 +105,7 @@ import javax.swing.event.ChangeListener;
 /**
  * This panel allows the user to select and configure a classifier, set the
  * attribute of the current dataset to be used as the class, and perform an
- * Experiment (like in the Experimenter) with this Classifier/Dataset
+ * Experiment (like in the Experimenter) with this J48Classifier/Dataset
  * combination. The results of the experiment runs are stored in a result
  * history so that previous results are accessible. <p/>
  * <p>
@@ -205,7 +205,7 @@ public class ExperimentPanel
     protected Instances m_Instances;
 
     /**
-     * The loader used to load the user-supplied WekaInterface set (if any).
+     * The loader used to load the user-supplied Weka set (if any).
      */
     protected Loader m_TestLoader;
 
@@ -320,7 +320,7 @@ public class ExperimentPanel
         JPanel p1 = new JPanel();
         p1.setBorder(
                 BorderFactory.createCompoundBorder(
-                        BorderFactory.createTitledBorder("Classifier"),
+                        BorderFactory.createTitledBorder("J48Classifier"),
                         BorderFactory.createEmptyBorder(0, 5, 5, 5)));
         p1.setLayout(new BorderLayout());
         p1.add(m_CEPanel, BorderLayout.NORTH);
@@ -954,7 +954,7 @@ public class ExperimentPanel
      */
     public static void main(String[] args) {
         try {
-            final javax.swing.JFrame jf = new javax.swing.JFrame("IWeka Explorer: Experiment");
+            final javax.swing.JFrame jf = new javax.swing.JFrame("J48Classifier Explorer: Experiment");
             jf.getContentPane().setLayout(new BorderLayout());
             final ExperimentPanel sp = new ExperimentPanel();
             jf.getContentPane().add(sp, BorderLayout.CENTER);

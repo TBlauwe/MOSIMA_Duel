@@ -1,8 +1,9 @@
 package MOSIMA_Duel.agents;
 
+import MOSIMA_Duel.Weka.Arff;
 import MOSIMA_Duel.behaviours.*;
+import MOSIMA_Duel.env.Situation;
 import env.jme.NewEnv;
-import env.jme.Situation;
 import jade.core.behaviours.FSMBehaviour;
 import sma.actionsBehaviours.PrologBehavior;
 import sma.agents.FinalAgent;
@@ -23,8 +24,6 @@ public class MosimaAgent extends FinalAgent {
 
     public static final long SLEEP_DURATION = 3000;
     public static final long FIRE_RATE = 1000;
-    public static final float VISION_NEIGHBOUR_DISTANCE = 1.0f;
-    public static final float VISION_FULL = 2.0f* (float) Math.PI;
 
 
     //| ============================
@@ -42,17 +41,22 @@ public class MosimaAgent extends FinalAgent {
         public String getValue() { return this.value; }
     }
 
+
     //| =============================
     //| ========== MEMBERS ==========
     //| =============================
     private FSMBehaviour fsm;
-    private long timeSinceLastShoot;
+
+    // ~ Misc
+    private long timeSinceLastShot;
+    public boolean useWeka;
 
     // ~ Log
-    private boolean		bTrace;
-    private String		logFileName;
-    private List<String> logEntries;
-    private List<String> csvEntries;
+    private boolean         bTrace;
+    private boolean         verbose;
+    private String          logFileName;
+    private List<String>    logEntries;
+    private List<String>    csvEntries;
 
 
     //| =======================================
@@ -61,16 +65,16 @@ public class MosimaAgent extends FinalAgent {
     private void defineFSM() {
         // ===== FSM STATES =====
 		fsm.registerFirstState(new StartupBehaviour(this)   , State.STARTUP.getValue());
-        fsm.registerState(new DecisionBehaviour(this)       , State.DECISION.getValue());
-        fsm.registerState(new ExplorationBehaviour(this)    , State.EXPLORATION.getValue());
-        fsm.registerState(new AttackBehaviour(this)         , State.ATTACK.getValue());
+		fsm.registerState(new DecisionBehaviour(this)       , State.DECISION.getValue());
+		fsm.registerState(new ExplorationBehaviour(this)    , State.EXPLORATION.getValue());
+		fsm.registerState(new AttackBehaviour(this)         , State.ATTACK.getValue());
 		fsm.registerLastState(new TerminateBehaviour(this)  , State.TERMINATE.getValue());
 
         // ===== FSM TRANSITIONS =====
 		fsm.registerDefaultTransition(State.STARTUP.getValue()  ,State.DECISION.getValue());
 
         fsm.registerDefaultTransition(State.DECISION.getValue()  ,State.DECISION.getValue());
-		fsm.registerTransition(State.DECISION.getValue(), State.EXPLORATION.getValue()  , DecisionBehaviour.Outcome.EXPLORATION.getValue());
+	    fsm.registerTransition(State.DECISION.getValue(), State.EXPLORATION.getValue()  , DecisionBehaviour.Outcome.EXPLORATION.getValue());
         fsm.registerTransition(State.DECISION.getValue(), State.ATTACK.getValue()       , DecisionBehaviour.Outcome.ATTACK.getValue());
 
         fsm.registerDefaultTransition(State.EXPLORATION.getValue()  ,State.DECISION.getValue());
@@ -81,8 +85,6 @@ public class MosimaAgent extends FinalAgent {
     protected void setup() {
         super.setup();
 
-        PrologBehavior.sit = Situation.getCurrentSituation(this);
-
         // ~~~~~ FSM  ~~~~~
         this.fsm = new FSMBehaviour(this) {
             private static final long serialVersionUID = -6846743268622891898L;
@@ -92,6 +94,7 @@ public class MosimaAgent extends FinalAgent {
                 return super.onEnd();
             }
         };
+
         defineFSM();
         addBehaviour(fsm);
     }
@@ -99,19 +102,26 @@ public class MosimaAgent extends FinalAgent {
     @Override
     protected void deploiment() {
         final Object[] args = getArguments();
-        if (args[0] == null || args[1] == null || args[2] == null) {
+        if (args[0] == null || args[1] == null || args[2] == null || args[3] == null || args[4] == null) {
             System.err.println("Malfunction during parameter's loading of agent" + this.getClass().getName());
             System.exit(-1);
         }
 
-        timeSinceLastShoot = 0;
-        bTrace		= (boolean) args[2];
-        logEntries	= new ArrayList<>();
-        csvEntries	= new ArrayList<>();
-        logFileName = "logs/" + getLocalName();
-        String s	=   "~~~ DESCRIPTION ~~~" + "\n" +
-                        "Name = " + getLocalName() + "\n" +
-                        "~~~ EXECUTION ~~~" + "\n";
+        timeSinceLastShot = 0;
+
+        bTrace          = (boolean) args[2];
+        verbose         = (boolean) args[3];
+        useWeka         = (boolean) args[4];
+        logEntries      = new ArrayList<>();
+        csvEntries      = new ArrayList<>();
+
+        logFileName     = "logs/" + getLocalName();
+
+        String s        =
+                        "~~~ DESCRIPTION ~~~"       + "\n" +
+                        "Name = " + getLocalName()  + "\n" +
+                        "~~~ EXECUTION ~~~"         + "\n";
+
         writeToFile(s, false);
 
         deployAgent((NewEnv) args[0], true);
@@ -124,15 +134,42 @@ public class MosimaAgent extends FinalAgent {
     //| ========== PUBLIC FUNCTIONS ==========
     //| ======================================
     public boolean canShoot(){
-        return System.currentTimeMillis() - timeSinceLastShoot > FIRE_RATE;
+        return System.currentTimeMillis() - timeSinceLastShot > FIRE_RATE;
     }
 
     public void confirmShoot(){
-        timeSinceLastShoot = System.currentTimeMillis();
+        timeSinceLastShot = System.currentTimeMillis();
     }
 
     public boolean hasArrivedToDestination(){
-        return getDestination() != null && getCurrentPosition().distance(getDestination()) < MosimaAgent.NEIGHBORHOOD_DISTANCE / 2f;
+        return (getDestination() != null && getCurrentPosition().distance(getDestination()) < MosimaAgent.NEIGHBORHOOD_DISTANCE / 2f) || getDestination() == null;
+    }
+
+    public void saveCurrentSituation(){
+        addCSVEntry(Situation.getCurrentSituation(this).toCSV());
+    }
+
+    public void saveRun(boolean won){
+        String gameOver = "," + ((won) ? "VICTORY" : "DEFEAT");
+
+        // ===== I. Save all situation saved when stateChanged
+        for(String entry: csvEntries){
+            entry += gameOver;
+            saveCSV("/ressources/learningBase/stateChanged/",
+                    "state_changed",
+                    "STATE_CHANGED",
+                    entry,
+                    true);
+        }
+        clearCSVEntries();
+
+        // ===== II. Save all situation saved when stateChanged
+        saveCSV("/ressources/learningBase/gameover/",
+                "results",
+                "GAMEOVER",
+                Situation.getCurrentSituation(this).toCSV() + gameOver,
+                true);
+
     }
 
 
@@ -149,10 +186,6 @@ public class MosimaAgent extends FinalAgent {
             csvEntries.add(s);
     }
 
-    public List<String> getCSVEntries() {
-        return csvEntries;
-    }
-
     public void clearCSVEntries() {
         csvEntries.clear();
     }
@@ -160,16 +193,18 @@ public class MosimaAgent extends FinalAgent {
     public void trace(String title) {
         if(!bTrace) { return; }
 
-        String header = "~~~ [" + getLocalName() + "] - " + title + " ~~~";
+        String header = "|\n~~~ [" + getLocalName() + "] - " + title + " ~~~";
         StringBuilder sb = new StringBuilder(header + "\n");
         for(String log:logEntries){
             sb.append(log);
             sb.append("\n");
         }
         sb.append(String.join("", Collections.nCopies(header.length(), "~")));
-        sb.append("\n\n");
+        sb.append("\n|\n");
 
-        System.out.println(sb.toString());
+        if(verbose)
+            System.out.println(sb.toString());
+
         writeToFile(sb.toString(), true);
         logEntries.clear();
     }
@@ -184,7 +219,7 @@ public class MosimaAgent extends FinalAgent {
         } catch (IOException e) { e.printStackTrace(); }
     }
 
-    public void saveCSV(String folder, String name, String relation, String data, boolean append, boolean useVictory) {
+    public void saveCSV(String folder, String name, String relation, String data, boolean append) {
         String pathName = System.getProperty("user.dir") + folder;
         String filename = name + ".arff";
 
@@ -207,14 +242,13 @@ public class MosimaAgent extends FinalAgent {
             BufferedWriter bw = new BufferedWriter(fw);
             PrintWriter out = new PrintWriter(bw))
         {
-            Map<String, Situation.ARFF_TYPE> columns = Situation.getColumns();
+            Map<String, Arff.TYPE> columns = Situation.getColumns();
             if(newFile){
-               out.println("@RELATION " + relation);
-               for(Map.Entry<String, Situation.ARFF_TYPE> column : columns.entrySet()){
-                   out.println("@ATTRIBUTE " + column.getKey() + " " + column.getValue());
+               out.println(Arff.getArffRelationHeader(relation));
+               for(Map.Entry<String, Arff.TYPE> attribute : columns.entrySet()){
+                   out.println(Arff.getArffAttributeHeader(attribute.getKey(), attribute.getValue()));
                }
-               if(useVictory)
-                   out.println("@ATTRIBUTE class {VICTORY, DEFEAT}");
+               out.println(Arff.getArffClassHeader("class", Situation.getClasses()));
                out.println("");
                out.println("@DATA");
             }

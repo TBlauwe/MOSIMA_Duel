@@ -4,8 +4,10 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 
+import MOSIMA_Duel.Utility.Utils;
 import MOSIMA_Duel.agents.MosimaAgent;
 
 import com.jme3.app.SimpleApplication;
@@ -204,21 +206,20 @@ public class NewEnv extends SimpleApplication {
         //this.inputManager.addMapping("FLYCAM_RotateDrag",new MouseButtonTrigger(MouseInput.BUTTON_RIGHT));
 
         this.inputManager.addMapping("FLYCAM_StrafeLeft", new KeyTrigger(
-                KeyInput.KEY_J));
+                KeyInput.KEY_Q));
         this.inputManager.addMapping("FLYCAM_StrafeRight", new KeyTrigger(
-                KeyInput.KEY_L));
+                KeyInput.KEY_D));
         this.inputManager.addMapping("FLYCAM_Forward", new KeyTrigger(
-                KeyInput.KEY_P));
+                KeyInput.KEY_Z));
         this.inputManager.addMapping("FLYCAM_Backward", new KeyTrigger(
-                KeyInput.KEY_M));
+                KeyInput.KEY_S));
         this.inputManager.addMapping("FLYCAM_Rise", new KeyTrigger(
-                KeyInput.KEY_I));
+                KeyInput.KEY_A));
         this.inputManager.addMapping("FLYCAM_Lower", new KeyTrigger(
-                KeyInput.KEY_K));
+                KeyInput.KEY_E));
 
         // Picking association
         //this.inputManager.addMapping("Picking", new MouseButtonTrigger(MouseInput.BUTTON_LEFT)); // trigger 2: left-button click
-
     }
 
 
@@ -358,10 +359,9 @@ public class NewEnv extends SimpleApplication {
         if (players.containsKey(agent)) {
             Spatial player = players.get(agent);
             player.getControl(PlayerControl.class).teleport(dest);
-            ;
-
+        }else{
+            System.out.println("moveTo Error : the agent " + agent + " doesn't exist.");
         }
-        System.out.println("moveTo Error : the agent " + agent + " doesn't exist.");
     }
 
     public synchronized void stopMoving(String agent) {
@@ -420,88 +420,55 @@ public class NewEnv extends SimpleApplication {
     public synchronized boolean shoot(String agent, String enemy) {
         if (players.containsKey(agent) && players.containsKey(enemy)) {
 
+            // ===== INITIALIZATION =====
+            MosimaAgent mosimaAgent;
+            FinalAgent finalAgent;
+            FinalAgent enemyAgent = agents.get(enemy);
+            if (enemy.equals("Player1")) {
+                mosimaAgent = (MosimaAgent) agents.get(enemy);
+                finalAgent = agents.get(agent);
+            }else{
+                mosimaAgent = (MosimaAgent) agents.get(agent);
+                finalAgent = agents.get(enemy);
+            }
+
             Vector3f origin = getCurrentPosition(agent);
             Vector3f target = getCurrentPosition(enemy);
-            Vector3f dir = target.subtract(origin).normalize();
-
-            FinalAgent enemyAgent = agents.get(enemy);
 
             if (isVisible(agent, enemy, MAX_DISTANCE)) {
 
-                Random r = new Random();
                 float impact = impactProba(origin, target);
-
-                System.out.println(agent + " shooting : " + impact);
-
-                if (r.nextFloat() < impact) {
-                    // Target shot
-                    System.out.println("Env - shot successfull !!");
+                if (Utils.dice(impact)) {   // SUCCESS
 
                     enemyAgent.life -= AbstractAgent.SHOT_DAMAGE;
                     enemyAgent.lastHit = System.currentTimeMillis();
 
                     if (enemy.equals("Player1")) {
-                        MosimaAgent a = (MosimaAgent) agents.get(enemy);
-                        String res = Situation.getCurrentSituation(a).toCSVFile();
-                        a.addCSVEntry(res);
+                        System.out.println(agent + " is shooting (Proba :" + Float.toString(impact) + ") - SUCCESS !!");
+                        mosimaAgent.saveCurrentSituation();
+                    }else{
+                        mosimaAgent.addLogEntry("FIRING ! (Proba : " + Float.toString(impact) + ") - SUCCESS !!");
                     }
 
                     if (enemyAgent.life <= 0) {
                         enemyAgent.dead = true;
 
-                        System.out.println(enemy + " killed.");
-                        System.out.println("Simulation done");
+                        System.out.println("========== Simulation done ==========");
+                        System.out.println(enemy + " has been killed.");
+                        System.out.println("=====================================");
 
-                        if (!enemy.equals("Player1")) {
-                            PrologBehavior.sit.victory = true;
-                            MosimaAgent a = (MosimaAgent) agents.get(agent);
-                            String res = Situation.getCurrentSituation(a).toCSVFile() + ",VICTORY";
+                        mosimaAgent.saveRun(!enemy.equals("Player1"));
 
-                            for(String entry: a.getCSVEntries()){
-                                entry += ",VICTORY";
-                                a.saveCSV("/ressources/learningBase/stateChanged/",
-                                        "state_changed",
-                                        "STATE_CHANGED",
-                                        entry,
-                                        true,
-                                        true);
-                            }
-                            a.clearCSVEntries();
-
-                            a.saveCSV("/ressources/learningBase/gameover/",
-                                    "results",
-                                    "GAMEOVER",
-                                    res,
-                                    true,
-                                    true);
-                        }else{
-                            MosimaAgent a = (MosimaAgent) agents.get(enemy);
-                            String res = Situation.getCurrentSituation(a).toCSVFile() + ",DEFEAT";
-
-                            for(String entry: a.getCSVEntries()){
-                                entry += ",DEFEAT";
-                                a.saveCSV("/ressources/learningBase/stateChanged/",
-                                        "state_changed",
-                                        "STATE_CHANGED",
-                                        entry,
-                                        true,
-                                        true);
-                            }
-                            a.clearCSVEntries();
-
-                            a.saveCSV("/ressources/learningBase/gameover/",
-                                    "results",
-                                    "GAMEOVER",
-                                    res,
-                                    true,
-                                    true);
-                        }
                         System.exit(0);
                     }
 
                     return true;
                 } else {
-                    System.out.println("Shot Missed");
+                    if (enemy.equals("Player1")){
+                        System.out.println(agent + " is shooting (Proba : " + Float.toString(impact) + ") - Failed ...");
+                    }else{
+                        mosimaAgent.addLogEntry("FIRING ! (Proba : " + Float.toString(impact) + ") - Failed ...");
+                    }
                 }
 
             } else {
@@ -510,23 +477,6 @@ public class NewEnv extends SimpleApplication {
 
         }
         return false;
-    }
-
-    public static void saveCSV() {
-
-        String res = PrologBehavior.sit.toCSVFile();
-        int id = new Random().nextInt(10000);
-        System.out.println(res);
-        try {
-            PrintWriter writer = new PrintWriter(System.getProperty("user.dir") + "/ressources/simus/Mosimu_" + id + ".csv", "UTF-8");
-            writer.println(res);
-            writer.close();
-            System.out.println("Execution result saved in /ressources/simus/");
-        } catch (IOException e) {
-            System.out.println(e);
-            System.out.println("Experiment saving failed");
-        }
-
     }
 
     public synchronized float impactProba(Vector3f origin, Vector3f target) {

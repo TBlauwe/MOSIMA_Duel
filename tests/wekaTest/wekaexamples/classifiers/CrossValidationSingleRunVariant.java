@@ -97,7 +97,7 @@ public class CrossValidationSingleRunVariant {
         // perform cross-validation
         System.out.println();
         System.out.println("=== Setup ===");
-        System.out.println("Classifier: " + cls.getClass().getName() + " " + Utils.joinOptions(cls.getOptions()));
+        System.out.println("J48Classifier: " + cls.getClass().getName() + " " + Utils.joinOptions(cls.getOptions()));
         System.out.println("Dataset: " + data.relationName());
         System.out.println("Folds: " + folds);
         System.out.println("Seed: " + seed);

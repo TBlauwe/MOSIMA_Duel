@@ -290,7 +290,7 @@ public class GeneratorPanel
     public static void main(String[] args) {
         try {
             final javax.swing.JFrame jf =
-                    new javax.swing.JFrame("IWeka Explorer: Data Generation");
+                    new javax.swing.JFrame("J48Classifier Explorer: Data Generation");
             jf.getContentPane().setLayout(new BorderLayout());
             final GeneratorPanel sp = new GeneratorPanel();
             jf.getContentPane().add(sp, BorderLayout.CENTER);

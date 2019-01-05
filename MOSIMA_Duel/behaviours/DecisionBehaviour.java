@@ -1,8 +1,9 @@
 package MOSIMA_Duel.behaviours;
 
+import MOSIMA_Duel.env.Situation;
 import env.jme.NewEnv;
-import env.jme.Situation;
 import jade.core.Agent;
+import org.jpl7.JPL;
 import org.jpl7.Query;
 import sma.InterestPoint;
 import java.util.ArrayList;
@@ -63,19 +64,18 @@ public class DecisionBehaviour extends AbstractFSMSimpleBehaviour {
             if (!Query.hasSolution(prolog)) {
                 System.out.println("Cannot open file " + prologFile);
             } else {
-                Situation sit = Situation.getCurrentSituation(myAgent);
+                MOSIMA_Duel.env.Situation sit   = Situation.getCurrentSituation(myAgent);
                 EnumSet<Behaviour>  behaviours  = EnumSet.allOf(Behaviour.class);
                 ArrayList<Object>   terms       = new ArrayList<>();
 
                 for (Behaviour b : behaviours) {
                     terms.clear();
-                    if (b.equals(Behaviour.EXPLORATION)) {
-                        terms.add(sit.timeSinceLastShot);
-                        terms.add(sit.offSize);
-                        terms.add(InterestPoint.INFLUENCE_ZONE);
-                        terms.add(NewEnv.MAX_DISTANCE);
-                    } else if (b.equals(Behaviour.ATTACK)) {
-                        terms.add(sit.enemyInSight);
+                    switch(b){
+                        case ATTACK:
+                            terms.add(sit.enemyInSight);
+                            break;
+                        default:
+                            break;
                     }
                     terms.add("'" + this.getClass().getCanonicalName() + "'" );
                     Query.hasSolution(prologQuery(b.value, terms));

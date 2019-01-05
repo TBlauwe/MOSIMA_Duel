@@ -1,6 +1,6 @@
-package MOSIMA_Duel.WekaInterface;
+package MOSIMA_Duel.Weka;
 
-import env.jme.Situation;
+import MOSIMA_Duel.env.Situation;
 import weka.classifiers.Classifier;
 import weka.core.Instance;
 import weka.core.Instances;
@@ -10,6 +10,8 @@ import java.awt.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
+
+import weka.core.converters.ConverterUtils;
 import weka.core.converters.ConverterUtils.DataSource;
 import weka.classifiers.trees.J48;
 import weka.filters.Filter;
@@ -19,7 +21,7 @@ import weka.gui.treevisualizer.TreeVisualizer;
 
 import javax.swing.*;
 
-public class IWeka {
+public class J48Classifier {
 
     //| ===============================
     //| ========== CONSTANTS ==========
@@ -32,7 +34,9 @@ public class IWeka {
     //| ============================
     public enum EDataSet {
         GAME_OVER("gameOver/results.arff"),
-        STATE_CHANGED("stateChanged/state_changed.arff");
+        STATE_CHANGED("stateChanged/state_changed.arff"),
+        GAME_OVER_LOCKED("gameOver/apprentissage.arff"),
+        STATE_CHANGED_LOCKED("stateChanged/apprentissage.arff");
 
         private String value;
         EDataSet(String value) { this.value = value; }
@@ -44,9 +48,8 @@ public class IWeka {
         MinAltitude(true),
         MaxAltitude(true),
         CurrentAltitude(true),
-        FovValue(true),
         Life(false),
-        ImpactProba(false);
+        FovValue(true);
 
         private boolean value;
         EAttribute(boolean value) { this.value = value; }
@@ -56,14 +59,39 @@ public class IWeka {
     //| =============================
     //| ========== MEMBERS ==========
     //| =============================
-    public static EDataSet source = EDataSet.GAME_OVER;
+    public static EDataSet source = EDataSet.GAME_OVER_LOCKED;
     public static Instances dataSet;
-    public static Classifier classifier;
+    public static weka.classifiers.Classifier classifier;
     public static Evaluation eval;
 
     //| =======================================
     //| ========== PUBLIC FUNCTIONS ===========
     //| =======================================
+    public static void main(String[] args) {
+        try {
+            // Initialization
+            DataSource source = null;
+            source = new DataSource(getFullDataSetPath());
+            Instances data = source.getDataSet();
+            if (data.classIndex() == -1)
+                data.setClassIndex(data.numAttributes() - 1);
+
+            // Filtering
+            dataSet = filterData(data);
+            System.out.println(dataSet);
+
+            // Classify
+            classifier = new J48();         // new instance of tree
+            classifier.setOptions(weka.core.Utils.splitOptions("-C 0.25 -M 2"));     // set the options
+            classifier.buildClassifier(dataSet);   // build classifier
+
+            evaluateTree(classifier, dataSet);
+            visualizeTree();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     public static void initialize() throws Exception {
         // Initialization
         DataSource source = new DataSource(getFullDataSetPath());
@@ -80,6 +108,7 @@ public class IWeka {
         classifier.buildClassifier(dataSet);   // build classifier
 
         evaluateTree(classifier, dataSet);
+        visualizeTree();
     }
 
     public static Map.Entry<String, Double> classify(Instance instance) {
@@ -108,13 +137,12 @@ public class IWeka {
     public static Instance situationToInstance(Situation sit){
         Instance instance = new Instance(EAttribute.values().length);
         instance.setDataset(dataSet);
-        instance.setValue(0, (double) sit.averageAltitude);
+        instance.setValue(0, (double) sit.avgAltitude);
         instance.setValue(1, (double) sit.minAltitude);
         instance.setValue(2, (double) sit.maxAltitude);
         instance.setValue(3, (double) sit.currentAltitude);
-        instance.setValue(4, (double) sit.currentAltitude);
-        instance.setValue(5, (double) sit.life);
-        instance.setValue(6, (double) sit.impactProba);
+        instance.setValue(4, (double) sit.life);
+        instance.setValue(5, (double) sit.fovValue);
         instance.setClassValue("DEFEAT"); //Doesn't matter since it won't be used
 
         return instance;
@@ -127,7 +155,7 @@ public class IWeka {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        JFrame jf = new JFrame("IWeka Classifier Tree Visualizer: J48");
+        JFrame jf = new JFrame("J48Classifier J48Classifier Tree Visualizer: J48");
         jf.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         jf.setSize(800, 600);
         jf.getContentPane().setLayout(new BorderLayout());
@@ -139,7 +167,7 @@ public class IWeka {
     //| =======================================
     //| ========== PRIVATE FUNCTIONS ===========
     //| =======================================
-    private static void evaluateTree(Classifier cls, Instances data) throws Exception{
+    private static void evaluateTree(weka.classifiers.Classifier cls, Instances data) throws Exception{
         eval = new Evaluation(data);
         eval.crossValidateModel(cls, data, 10, new Random(1));
     }

@@ -1,31 +1,18 @@
 use_module(library(jpl)).
 
-explore_points(OffSize,DefSize):-
-	OffSize>=2*DefSize. /* true if search for defensive */
-
-being_attacked(Time):-
-	Time<10.
-
-areaCovered(Radius, Size, MapWidth):-
-	2*pi*Radius*Size<0.6*MapWidth.
-
-inGoodHealth(life):-
-	life>3.
-
 shotImpact(Probability):-
 	Probability>0.1.
 
 /* DECISIONS */
-see(Class):-
+see(EnemyInSight, Class):-
+	not(EnemyInSight),
 	jpl_call(Class, evaluateBestPos, [], @(void)).
 
-toOpenFire(EnemyInSight, P, Class):-
-	shotImpact(P),
-	EnemyInSight.
+toOpenFire(EnemyInSight, P):-
+	EnemyInSight,
+	shotImpact(P).
 
-explore(Time, Size, Radius, MapWidth, Class):-
-	not(being_attacked(Time)),
-	areaCovered(Radius, Size, MapWidth),
+explore(Class):-
 	jpl_call(Class, executeExplore, [], @(void)).
 
 attack(EnemyInSight, Class):-

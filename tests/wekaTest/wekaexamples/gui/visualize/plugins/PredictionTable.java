@@ -40,7 +40,7 @@ public class PredictionTable
         implements VisualizePlugin {
 
     /**
-     * Get the specific version of IWeka the class is designed for.
+     * Get the specific version of J48Classifier the class is designed for.
      * eg: <code>3.5.1</code>
      *
      * @return the version string
@@ -50,7 +50,7 @@ public class PredictionTable
     }
 
     /**
-     * Get the minimum version of IWeka, inclusive, the class
+     * Get the minimum version of J48Classifier, inclusive, the class
      * is designed to work with.  eg: <code>3.5.0</code>
      *
      * @return the version string
@@ -60,7 +60,7 @@ public class PredictionTable
     }
 
     /**
-     * Get the maximum version of IWeka, exclusive, the class
+     * Get the maximum version of J48Classifier, exclusive, the class
      * is designed to work with.  eg: <code>3.6.0</code>
      *
      * @return the version string
@@ -73,7 +73,7 @@ public class PredictionTable
      * Get a JMenu or JMenuItem which contain action listeners
      * that perform the visualization, using some but not
      * necessarily all of the data.  Exceptions thrown because of
-     * changes in IWeka since compilation need to be caught by
+     * changes in J48Classifier since compilation need to be caught by
      * the implementer.
      *
      * @param preds    predictions

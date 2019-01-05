@@ -110,7 +110,8 @@ public class Principal {
         c = containerList.get("container0");
         agentName = "Player1";
         try {
-            Object[] objtab = new Object[]{env, true, true};//used to give informations to the agent (the behaviours to trigger)
+                                        // ENV    ? TRACE VERBOSE WEKA
+            Object[] objtab = new Object[]{env, true, true, true, true};//used to give informations to the agent (the behaviours to trigger)
             AgentController ag = c.createNewAgent(agentName, MosimaAgent.class.getName(), objtab);
             agentList.add(ag);
             System.out.println(agentName + " launched");

@@ -1,19 +1,12 @@
 package MOSIMA_Duel.behaviours;
 
 import MOSIMA_Duel.agents.MosimaAgent;
-import MOSIMA_Duel.WekaInterface.IWeka;
-import MOSIMA_Duel.utils.MapUtil;
+import MOSIMA_Duel.env.Situation;
 import com.jme3.math.Vector3f;
-import env.jme.Situation;
 import jade.core.Agent;
 import org.jpl7.Query;
-import org.lwjgl.Sys;
-import weka.core.Instance;
-import weka.core.Utils;
 
-import java.awt.*;
 import java.util.*;
-import java.util.stream.Collectors;
 
 
 public class AttackBehaviour extends AbstractFSMSimpleBehaviour {
@@ -58,19 +51,20 @@ public class AttackBehaviour extends AbstractFSMSimpleBehaviour {
 
         if(sit.enemy != null){
             if (myAgent.isVisible(sit.enemy, MosimaAgent.VISION_DISTANCE)) {
-                String res = Situation.getCurrentSituation(myAgent).toCSVFile();
-                myAgent.addCSVEntry(res);
                 if (myAgent.canShoot()) { // Is weapon cooldown finished ?
                     if (askForFirePermission()){ // Prolog call
+
+                        /**
                         // Go to nearest position
                         Vector3f lastPosition   = myAgent.getEnemyLocation(sit.enemy);
                         if(lastPosition != null) {
                                 myAgent.goTo(findHighestNeighborClosestTo(lastPosition));
                         }
+                         **/
 
                         // Firing
-                        myAgent.addLogEntry("FIRING !");
                         myAgent.shoot(sit.enemy);
+                        myAgent.saveCurrentSituation();
                         myAgent.confirmShoot();
                         myAgent.lastAction = "attacking";
                         act = true;
@@ -133,7 +127,7 @@ public class AttackBehaviour extends AbstractFSMSimpleBehaviour {
         ArrayList<Object>   terms       = new ArrayList<>();
         terms.add(sit.enemyInSight);
         terms.add(sit.impactProba);
-        terms.add("'" + this.getClass().getCanonicalName() + "'" );
+        //terms.add("'" + this.getClass().getCanonicalName() + "'" );
         return Query.hasSolution(prologQuery("toOpenFire", terms));
     }
 

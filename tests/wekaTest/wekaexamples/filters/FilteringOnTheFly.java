@@ -38,7 +38,7 @@ import weka.filters.unsupervised.attribute.Remove;
 public class FilteringOnTheFly {
 
     /**
-     * Expects two parameters: training and WekaInterface file.
+     * Expects two parameters: training and Weka file.
      * It is assumed that the class attribute is the last attribute in the
      * dataset.
      *

@@ -9,7 +9,7 @@ public class TestPrologCalls2Ways {
     public static int succesRate = 81;
 
     public static void test() {
-        System.out.println("Java function WekaInterface() called :)");
+        System.out.println("Java function Weka() called :)");
     }
 
     /**
@@ -31,7 +31,7 @@ public class TestPrologCalls2Ways {
         //System.out.println(""+System.getProperty("user.dir"));
 
         //unexplicit loading of the file
-        String query = "consult('./ressources/prolog/WekaInterface/fishing.pl')";
+        String query = "consult('./ressources/prolog/Weka/fishing.pl')";
         System.out.println(query + " ?: " + Query.hasSolution(query));
 
         System.out.println("**Test 1**");
@@ -57,7 +57,7 @@ public class TestPrologCalls2Ways {
 //		Query q1 =
 //	            new Query(
 //	                "consult",
-//	                new Term[] {new Atom("WekaInterface.pl")}
+//	                new Term[] {new Atom("Weka.pl")}
 //	            );
 //	    
 //	    

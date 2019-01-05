@@ -10,7 +10,7 @@ public class TestPrologLauncher {
     public static void main(String[] args) {
 
 
-        String fish = "consult('./ressources/prolog/WekaInterface/fishing.pl')";
+        String fish = "consult('./ressources/prolog/Weka/fishing.pl')";
 
         if (!Query.hasSolution(fish)) {
             System.out.println(fish + " failed, no solution found");
@@ -24,7 +24,7 @@ public class TestPrologLauncher {
             System.out.println(t1 + " failed");
             // System.exit(1);
         }
-        System.out.println("WekaInterface passed");
+        System.out.println("Weka passed");
 
 
     }

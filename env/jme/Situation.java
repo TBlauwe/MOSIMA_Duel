@@ -29,21 +29,6 @@ public class Situation {
     public static final String HUNT = "hunt";
     public static final String RETREAT = "retreat";
 
-    //| ===========================
-    //| ========== ENUMS ==========
-    //| ===========================
-    public enum ARFF_TYPE {
-        REAL("REAL"),
-        INTEGER("INTEGER"),
-        NOMINAL("NOMINAL"),
-        STRING("STRING");
-
-        private String value;
-        ARFF_TYPE(String value) { this.value = value; }
-        public String getValue() { return this.value; }
-    }
-
-
     //| =============================
     //| ========== MEMBERS ==========
     //| =============================
@@ -125,45 +110,6 @@ public class Situation {
         return sit;
     }
 
-    public static Map<String, Double> getCSVValuesFrom(Situation sit) {
-        LinkedHashMap<String, Double> columns = new LinkedHashMap<>();
-
-        columns.put("AvgAltitude", (double) sit.averageAltitude);
-        columns.put("MinAltitude", (double) sit.minAltitude);
-        columns.put("MaxAltitude", (double) sit.maxAltitude);
-        columns.put("CurrentAltitude", (double) sit.currentAltitude);
-        columns.put("FovValue", (double) sit.currentAltitude);
-        columns.put("Life", (double) sit.life);
-        columns.put("ImpactProba", (double) sit.impactProba);
-
-        return columns;
-    }
-
-    public static Map<String, ARFF_TYPE> getColumns() {
-        LinkedHashMap<String, ARFF_TYPE> columns = new LinkedHashMap<>();
-
-        columns.put("AvgAltitude", ARFF_TYPE.REAL);
-        columns.put("MinAltitude", ARFF_TYPE.REAL);
-        columns.put("MaxAltitude", ARFF_TYPE.REAL);
-        columns.put("CurrentAltitude", ARFF_TYPE.REAL);
-        columns.put("FovValue", ARFF_TYPE.REAL);
-        columns.put("Life", ARFF_TYPE.REAL);
-        columns.put("ImpactProba", ARFF_TYPE.REAL);
-
-        return columns;
-    }
-
-    public String toCSVFile() {
-        String res =
-                averageAltitude + "," +
-                        minAltitude + "," +
-                        maxAltitude + "," +
-                        currentAltitude + "," +
-                        fovValue + "," +
-                        life + "," +
-                        impactProba;
-        return res;
-    }
 
     //| =======================================
     //| ========== PRIVATE FUNCTIONS ==========

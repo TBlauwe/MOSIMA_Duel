@@ -35,7 +35,7 @@ import java.util.Random;
 
 /**
  * Performs a single run of cross-validation and adds the prediction on the
- * WekaInterface set to the dataset.
+ * Weka set to the dataset.
  * <p>
  * Command-line parameters:
  * <ul>
@@ -122,7 +122,7 @@ public class CrossValidationAddPrediction {
             filter.setOutputErrorFlag(true);
             filter.setInputFormat(train);
             Filter.useFilter(train, filter);  // trains the classifier
-            Instances pred = Filter.useFilter(test, filter);  // perform predictions on WekaInterface set
+            Instances pred = Filter.useFilter(test, filter);  // perform predictions on Weka set
             if (predictedData == null)
                 predictedData = new Instances(pred, 0);
             for (int j = 0; j < pred.numInstances(); j++)
@@ -132,7 +132,7 @@ public class CrossValidationAddPrediction {
         // output evaluation
         System.out.println();
         System.out.println("=== Setup ===");
-        System.out.println("Classifier: " + cls.getClass().getName() + " " + Utils.joinOptions(cls.getOptions()));
+        System.out.println("J48Classifier: " + cls.getClass().getName() + " " + Utils.joinOptions(cls.getOptions()));
         System.out.println("Dataset: " + data.relationName());
         System.out.println("Folds: " + folds);
         System.out.println("Seed: " + seed);

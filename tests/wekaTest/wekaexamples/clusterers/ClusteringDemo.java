@@ -29,7 +29,7 @@ import weka.core.Instances;
 import weka.core.converters.ConverterUtils.DataSource;
 
 /**
- * An example class that shows the use of IWeka clusterers from Java.
+ * An example class that shows the use of J48Classifier clusterers from Java.
  *
  * @author FracPete (fracpete at waikato dot ac dot nz)
  * @version $Revision: 5628 $

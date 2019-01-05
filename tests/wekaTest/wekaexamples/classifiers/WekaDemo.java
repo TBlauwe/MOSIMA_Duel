@@ -130,9 +130,9 @@ public class WekaDemo {
         StringBuffer result;
 
         result = new StringBuffer();
-        result.append("IWeka - Demo\n===========\n\n");
+        result.append("J48Classifier - Demo\n===========\n\n");
 
-        result.append("Classifier...: "
+        result.append("J48Classifier...: "
                 + m_Classifier.getClass().getName() + " "
                 + Utils.joinOptions(m_Classifier.getOptions()) + "\n");
         if (m_Filter instanceof OptionHandler)

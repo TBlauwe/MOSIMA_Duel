@@ -257,7 +257,7 @@ public class SqlPanel
     public static void main(String[] args) {
         try {
             final javax.swing.JFrame jf =
-                    new javax.swing.JFrame("IWeka Explorer: SQL");
+                    new javax.swing.JFrame("J48Classifier Explorer: SQL");
             jf.getContentPane().setLayout(new BorderLayout());
             final SqlPanel sp = new SqlPanel();
             jf.getContentPane().add(sp, BorderLayout.CENTER);

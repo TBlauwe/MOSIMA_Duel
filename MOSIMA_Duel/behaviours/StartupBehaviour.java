@@ -1,6 +1,6 @@
 package MOSIMA_Duel.behaviours;
 
-import MOSIMA_Duel.WekaInterface.IWeka;
+import MOSIMA_Duel.Weka.J48Classifier;
 import MOSIMA_Duel.agents.MosimaAgent;
 import jade.core.Agent;
 
@@ -33,10 +33,23 @@ public class StartupBehaviour extends AbstractFSMSimpleBehaviour {
 
     @Override
     public void action() {
-        myAgent.addLogEntry("sleeping for " + MosimaAgent.SLEEP_DURATION + " milliseconds");
+
+        // ===== INITIALIZATION =====
+        float start = System.currentTimeMillis();
+        if(myAgent.useWeka){
+            myAgent.addLogEntry("building classifier based on my previous knowledge");
+            try {
+                J48Classifier.initialize();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        float buildDuration = System.currentTimeMillis() - start;
+
+        // ===== SLEEP FOR REMAINING TIME (or else shoot to quickly) =====
+        myAgent.addLogEntry("sleeping for " + (MosimaAgent.SLEEP_DURATION -  buildDuration) + " milliseconds");
         myAgent.trace(getBehaviourName());
         try {
-            IWeka.initialize();
             Thread.sleep(MosimaAgent.SLEEP_DURATION);
         } catch (Exception e) {
             e.printStackTrace();

@@ -56,7 +56,7 @@ public class VisualizeJ48 {
 
         // display tree
         TreeVisualizer tv = new TreeVisualizer(null, cls.graph(), new PlaceNode2());
-        JFrame jf = new JFrame("IWeka Classifier Tree Visualizer: J48");
+        JFrame jf = new JFrame("J48Classifier J48Classifier Tree Visualizer: J48");
         jf.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         jf.setSize(800, 600);
         jf.getContentPane().setLayout(new BorderLayout());
